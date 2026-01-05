@@ -70,20 +70,60 @@
 
 ### 3.3 Хранение данных
 - **Изолированная БД** для проекта (отдельно от учебной БД/ХД).
+- Выбран **вариант 1**: разделение базы на несколько самостоятельных БД/схем по сервисам.
 - Подход **database-per-service**: отдельные базы/схемы для каждого сервиса (`AuthDB`, `DealDB`, `PaymentDB`).
 - Внешнее хранилище данных (DWH) подключается через экспорт или асинхронные события (ETL/CDC).
 
-### 3.4 Взаимодействие компонентов
-- **Синхронно:** REST/gRPC запросы через API Gateway для операций пользователя (создание брони, оплата, получение отчета).
-- **Асинхронно:** обмен событиями через брокер сообщений (например, `DealCreated`, `PaymentCompleted`, `GuestCheckedIn`).
+### 3.4 Логическая модель данных (SQL-схема)
+- Полный SQL-скрипт: `sql/00_schema_full_mssql.sql` (таблицы, ограничения, представления, процедуры, триггеры).
+- Таблицы: `manager`, `administrator`, `health_profile`, `status_room`, `status_of_contract`, `room_type`, `pansionat`, `service`, `room`, `resident`, `contract`, `provision_of_services`, `using_service`, `vladenie`.
+- Ключевые связи:
+  - `pansionat` -> `administrator`, `health_profile` (N:1).
+  - `room` -> `pansionat`, `room_type`, `status_room` (N:1).
+  - `resident` -> `manager` (N:1).
+  - `contract` -> `manager`, `room`, `resident`, `status_of_contract` (N:1); заданы уникальные ограничения на `room` и `resident`.
+  - `provision_of_services` связывает `service` и `pansionat` (M:N).
+  - `using_service` связывает `service` и `resident` (M:N).
+  - `vladenie` связывает `administrator` и `pansionat` (M:N).
+- Бизнес-логика в БД: представления `vw_*` для аналитики, процедуры `sp_*` для операций, триггеры для скидок и авто-обработки статусов.
 
-### 3.5 Мониторинг и наблюдаемость
-- Health-check endpoints для каждого сервиса.
-- Метрики (Prometheus) и визуализация (Grafana).
-- Централизованные логи (например, Seq/ELK).
-- Трассировка запросов (OpenTelemetry).
+### 3.5 Разбиение таблиц по микросервисам
+- **Auth Service (AuthDB):** `administrator`, `manager` (профили пользователей); планируемые таблицы аутентификации `user_account`, `role`, `user_role`, `refresh_token` (в скрипт БД не включены).
+- **Deal Service (DealDB):** `pansionat`, `room`, `room_type`, `status_room`, `resident`, `contract`, `status_of_contract`, `health_profile`, `service`, `provision_of_services`, `using_service`, `vladenie`.
+- **Payment Service (PaymentDB):** планируемые таблицы `invoice`, `payment`, `payment_method`, `payment_status`, `refund` (оплата выделяется в отдельный сервис, таблицы будут добавлены при реализации).
+- Межсервисные связи выполняются через идентификаторы и события; прямых внешних ключей между БД сервисов нет.
 
-### 3.6 Диаграмма компонентов
+### 3.6 Границы ответственности и владение данными
+- **Auth Service:** пользователи, роли, учетные данные, токены; является источником истины для доступа и прав.
+- **Deal Service:** бронирования, договоры, статусы заезда/выезда, номерной фонд; источник истины по сделкам.
+- **Payment Service:** счета, оплаты, возвраты, статусы платежей; источник истины по финансовым операциям.
+- **Правило владения:** каждый сервис управляет только своей БД; другие сервисы обращаются к нему через API или события, прямых доступов к БД нет.
+
+### 3.7 Контракты API и события
+- **Auth API (REST):** `POST /auth/login`, `POST /auth/refresh`, `POST /users`, `GET /users/{id}`, `GET /roles`.
+- **Deal API (REST):** `POST /contracts`, `PATCH /contracts/{id}/status`, `POST /checkin`, `POST /checkout`, `GET /rooms/availability`.
+- **Payment API (REST):** `POST /invoices`, `POST /payments`, `POST /refunds`, `GET /payments/{id}`.
+- **События (async):** `DealCreated`, `ContractStatusChanged`, `GuestCheckedIn`, `InvoiceIssued`, `PaymentCompleted`, `RefundIssued`.
+- **Минимальный payload событий:** `eventId`, `timestamp`, `contractId`, `residentId`, `amount`, `status`.
+
+### 3.8 Модель данных для AuthDB и PaymentDB
+- **AuthDB:** `user_account(id, email, password_hash, is_active, created_at)`, `role(id, code, name)`, `user_role(user_id, role_id)`, `refresh_token(id, user_id, token_hash, expires_at, revoked_at)`.
+- **PaymentDB:** `invoice(id, contract_id, amount, currency, status, issued_at)`, `payment(id, invoice_id, method_id, amount, status, paid_at, external_ref)`, `payment_method(id, name)`, `payment_status(id, code)`, `refund(id, payment_id, amount, status, created_at)`.
+- Внешние связи между сервисами только по идентификаторам (`contract_id`, `resident_id`) без межбазовых FK.
+
+### 3.9 Правила взаимодействия (sync/async, таймауты, ретраи)
+- **Синхронно:** запросы через API Gateway; таймауты 2-3 сек; ретраи только для идемпотентных операций (2 попытки, backoff).
+- **Асинхронно:** брокер сообщений, доставка at-least-once; потребители обязаны быть идемпотентными.
+- **Идемпотентность платежей:** использование `Idempotency-Key` в `POST /payments` и `POST /refunds`.
+- **Согласование статусов:** Deal публикует событие о сделке, Payment выставляет счет и публикует события об оплате, Deal обновляет статус оплаты по событию.
+
+### 3.10 Наблюдаемость и развертывание
+- Health-check endpoints (`/health`) и метрики (`/metrics`) для каждого сервиса.
+- Корреляция запросов через `traceId`, централизованные логи (Seq/ELK), трассировка (OpenTelemetry).
+- Конфигурации через `appsettings.*`, секреты через user-secrets/ENV.
+- Отдельные среды `dev/test/prod`, запуск сервисов из Visual Studio с множественным стартом.
+
+### 3.11 Диаграмма компонентов
 Диаграмма компонентов представлена в файле:
 - `docs/diagrams/component-diagram.puml`
 
@@ -110,6 +150,7 @@
 - Интеграционные тесты для API (создание брони, оплата, формирование отчета).
 - Нагрузочное тестирование ключевых операций (поиск, отчетность).
 - Проверка работоспособности на Windows 10+ в среде Visual Studio 2019/2022 или VSCode.
+- **Критерии готовности:** все тесты проходят; основные сценарии (бронирование, оплата, закрытие сделки) подтверждены; сервисы отдают `/health`; метрики и логи доступны.
 
 ## 6. Заключение
 

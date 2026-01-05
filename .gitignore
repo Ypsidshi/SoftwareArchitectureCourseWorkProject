@@ -1,0 +1,51 @@
+## Build results
+[Bb]in/
+[Oo]bj/
+[Aa]rtifacts/
+
+## Visual Studio files
+.vs/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+TestResults/
+
+## Visual Studio Code
+.vscode/
+.history/
+
+## Rider / JetBrains
+.idea/
+
+## NuGet
+packages/
+*.nupkg
+*.snupkg
+
+## OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+## Logs
+*.log
+logs/
+
+## Environment files
+.env
+.env.*
+
+## Secrets
+secrets.json
+*secrets*.json
+
+## Coverage
+coverage/
+*.coverage
+*.coveragexml
+*.opencover.xml
+
+## Node (if used)
+node_modules/
