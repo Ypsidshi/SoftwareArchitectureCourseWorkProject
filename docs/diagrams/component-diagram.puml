@@ -1,0 +1,60 @@
+﻿@startuml
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+actor "Admin" as Admin
+actor "Manager" as Manager
+actor "Accountant" as Accountant
+actor "Guest" as Guest
+
+component "Web/Desktop UI" as UI
+component "API Gateway" as Gateway
+
+component "Auth Service" as Auth
+component "Deal Service" as Deal
+component "Payment Service" as Pay
+
+queue "Message Broker" as Broker
+
+database "AuthDB" as AuthDB
+database "DealDB" as DealDB
+database "PaymentDB" as PayDB
+
+component "Monitoring\n(Prometheus+Grafana)" as Mon
+component "Logging\n(Seq/ELK)" as Log
+component "DWH/ETL\n(External)" as DWH
+
+Admin --> UI
+Manager --> UI
+Accountant --> UI
+Guest --> UI
+
+UI --> Gateway : HTTPS (sync)
+Gateway --> Auth : REST/gRPC
+Gateway --> Deal : REST/gRPC
+Gateway --> Pay : REST/gRPC
+
+Auth --> AuthDB
+Deal --> DealDB
+Pay --> PayDB
+
+Deal ..> Broker : publish events
+Pay ..> Broker : publish events
+Auth ..> Broker : publish events
+
+Broker ..> Deal : async events
+Broker ..> Pay : async events
+
+Auth --> Mon : /health, /metrics
+Deal --> Mon : /health, /metrics
+Pay --> Mon : /health, /metrics
+Gateway --> Mon : /health, /metrics
+
+Auth --> Log
+Deal --> Log
+Pay --> Log
+Gateway --> Log
+
+Broker ..> DWH : ETL/CDC
+
+@enduml
