@@ -49,3 +49,6 @@ coverage/
 
 ## Node (if used)
 node_modules/
+
+gomodcache/
+gocache/
