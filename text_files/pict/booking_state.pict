@@ -1,0 +1,26 @@
+State: NotExists, Confirmed, Cancelled
+Operation: Create, Update, Cancel, Read
+Ownership: Owner, NonOwner
+DateRangeValidity: Valid, Invalid, NA
+GuestsValidity: Valid, Invalid, NA
+Availability: Available, NotAvailable, NA
+
+IF [Operation] = "Create" THEN [State] = "NotExists";
+IF [Operation] = "Create" THEN [Ownership] = "Owner";
+IF [Operation] = "Create" THEN [DateRangeValidity] <> "NA";
+IF [Operation] = "Create" THEN [GuestsValidity] <> "NA";
+IF [Operation] = "Create" THEN [Availability] <> "NA";
+
+IF [Operation] = "Update" THEN [State] = "Confirmed";
+IF [Operation] = "Update" THEN [DateRangeValidity] <> "NA";
+IF [Operation] = "Update" THEN [GuestsValidity] <> "NA";
+IF [Operation] = "Update" THEN [Availability] <> "NA";
+
+IF [Operation] = "Cancel" THEN [State] = "Confirmed";
+IF [Operation] = "Cancel" THEN [DateRangeValidity] = "NA";
+IF [Operation] = "Cancel" THEN [GuestsValidity] = "NA";
+IF [Operation] = "Cancel" THEN [Availability] = "NA";
+
+IF [Operation] = "Read" THEN [DateRangeValidity] = "NA";
+IF [Operation] = "Read" THEN [GuestsValidity] = "NA";
+IF [Operation] = "Read" THEN [Availability] = "NA";

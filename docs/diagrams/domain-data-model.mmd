@@ -1,0 +1,59 @@
+erDiagram
+    AUTH_USERS {
+        uuid id
+        string email
+        string full_name
+        string role
+        string password_hash
+    }
+
+    DEAL_SANATORIUMS {
+        uuid id
+        string name
+        string city
+        numeric price_per_night
+        int total_places
+    }
+
+    DEAL_BOOKINGS {
+        uuid id
+        uuid client_id
+        uuid sanatorium_id
+        date check_in
+        date check_out
+        int guests
+        string status
+    }
+
+    DEAL_CONTRACTS {
+        uuid id
+        uuid resident_id
+        uuid manager_id
+        date start_date
+        date end_date
+        numeric amount
+        string status
+        string payment_status
+        uuid invoice_id
+    }
+
+    PAYMENT_INVOICES {
+        uuid id
+        uuid contract_id
+        numeric amount
+        string currency
+        string status
+    }
+
+    PAYMENT_PAYMENTS {
+        uuid id
+        uuid invoice_id
+        numeric amount
+        string status
+        string idempotency_key
+    }
+
+    DEAL_SANATORIUMS ||--o{ DEAL_BOOKINGS : contains
+    AUTH_USERS ||--o{ DEAL_BOOKINGS : creates
+    DEAL_CONTRACTS ||--|| PAYMENT_INVOICES : issues
+    PAYMENT_INVOICES ||--o{ PAYMENT_PAYMENTS : receives

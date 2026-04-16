@@ -1,0 +1,12 @@
+﻿Season: High, Shoulder, Low
+Room: Standard, Luxe
+Meal: BB, HB, FB
+Guests: G1, G2, G3, G4
+Stay: Short, Medium, Long
+Benefit: None, ChildDiscount, Veteran
+
+IF [Season] = "High" THEN [Guests] <> "G4";
+IF [Room] = "Luxe" THEN [Stay] <> "Short";
+IF [Meal] = "FB" THEN [Stay] <> "Short";
+IF [Benefit] = "ChildDiscount" THEN [Guests] IN {"G2","G3","G4"};
+IF [Benefit] = "Veteran" THEN [Season] <> "High";

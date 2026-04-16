@@ -1,0 +1,91 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: coursework-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sanatorium
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../sql/postgres:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sanatorium"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  nats:
+    image: nats:2.12-alpine
+    container_name: coursework-nats
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+
+  auth-service:
+    build:
+      context: ../..
+      dockerfile: src/go-microservices/auth-service/Dockerfile
+    container_name: coursework-auth-service
+    environment:
+      SERVICE_NAME: auth-service
+      HTTP_PORT: 8081
+      DB_URL: postgres://postgres:postgres@postgres:5432/sanatorium?sslmode=disable
+      LOG_LEVEL: info
+      JWT_SECRET: coursework-dev-secret
+      TOKEN_TTL_MINUTES: 120
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+
+  deal-service:
+    build:
+      context: ../..
+      dockerfile: src/go-microservices/deal-service/Dockerfile
+    container_name: coursework-deal-service
+    environment:
+      SERVICE_NAME: deal-service
+      HTTP_PORT: 8082
+      DB_URL: postgres://postgres:postgres@postgres:5432/sanatorium?sslmode=disable
+      LOG_LEVEL: info
+      AUTH_SERVICE_URL: http://auth-service:8081
+      PAYMENT_SERVICE_URL: http://payment-service:8083
+      NATS_URL: nats://nats:4222
+      JWT_SECRET: coursework-dev-secret
+      INTERNAL_API_KEY: coursework-internal-dev-key
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_started
+      payment-service:
+        condition: service_started
+    ports:
+      - "8082:8082"
+
+  payment-service:
+    build:
+      context: ../..
+      dockerfile: src/go-microservices/payment-service/Dockerfile
+    container_name: coursework-payment-service
+    environment:
+      SERVICE_NAME: payment-service
+      HTTP_PORT: 8083
+      DB_URL: postgres://postgres:postgres@postgres:5432/sanatorium?sslmode=disable
+      LOG_LEVEL: info
+      NATS_URL: nats://nats:4222
+      INTERNAL_API_KEY: coursework-internal-dev-key
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_started
+    ports:
+      - "8083:8083"
+
+volumes:
+  postgres_data:

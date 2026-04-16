@@ -1,0 +1,14 @@
+AUTO METRICS: BookingService.CreateBooking
+LOC(total/non-empty/comments): 34/31/0
+Halstead n1=19 N1=130 n2=46 N2=104 n=65 N=234 V=1409.23 D=21.48 E=30267.90
+CreateBooking CC=6
+BookingService method CC:
+  ListSanatoriums: CC=10 (decisions=9)
+  GetSanatoriumDetails: CC=6 (decisions=5)
+  CreateBooking: CC=6 (decisions=5)
+  UpdateBooking: CC=6 (decisions=5)
+  CancelBooking: CC=4 (decisions=3)
+  GetBooking: CC=1 (decisions=0)
+  ListBookings: CC=3 (decisions=2)
+  publishBookingEvent: CC=4 (decisions=3)
+WMC=40

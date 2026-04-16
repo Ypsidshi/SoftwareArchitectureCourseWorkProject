@@ -1,0 +1,34 @@
+flowchart LR
+    subgraph clients [Clients]
+        client[Client]
+        staff[Staff]
+    end
+
+    subgraph services [GoMicroservices]
+        authService[authService]
+        dealService[dealService]
+        paymentService[paymentService]
+    end
+
+    subgraph asyncBus [AsyncBus]
+        nats[NATS]
+    end
+
+    subgraph dataLayer [DataLayer]
+        postgres[(PostgreSQL)]
+    end
+
+    client -->|"register/login"| authService
+    client -->|"catalog/bookings"| dealService
+    staff -->|"contracts"| dealService
+    staff -->|"payments"| paymentService
+
+    dealService -->|"auth proxy login"| authService
+    dealService -->|"internal invoice issue"| paymentService
+    paymentService -->|"payment.completed"| nats
+    dealService -->|"booking.*"| nats
+    nats -->|"payment.completed subscription"| dealService
+
+    authService --> postgres
+    dealService --> postgres
+    paymentService --> postgres

@@ -1,0 +1,11 @@
+ClientID: Filled, Empty
+SanatoriumID: Filled, Empty
+CheckIn: Provided, Missing
+CheckOut: Provided, Missing
+DateRange: Valid, Invalid, NA
+Guests: Valid, Invalid
+RepoCheck: Pass, Fail
+
+IF [CheckIn] = "Missing" THEN [DateRange] = "NA";
+IF [CheckOut] = "Missing" THEN [DateRange] = "NA";
+IF [CheckIn] = "Provided" AND [CheckOut] = "Provided" THEN [DateRange] <> "NA";

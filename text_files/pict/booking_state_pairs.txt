@@ -1,0 +1,13 @@
+﻿State	Operation	Ownership	DateRangeValidity	GuestsValidity	Availability
+NotExists	Create	Owner	Valid	Invalid	Available
+Cancelled	Read	Owner	NA	NA	NA
+Confirmed	Cancel	Owner	NA	NA	NA
+Confirmed	Update	NonOwner	Invalid	Valid	NotAvailable
+Confirmed	Update	NonOwner	Invalid	Invalid	Available
+NotExists	Create	Owner	Invalid	Valid	NotAvailable
+Confirmed	Cancel	NonOwner	NA	NA	NA
+Cancelled	Read	NonOwner	NA	NA	NA
+NotExists	Read	NonOwner	NA	NA	NA
+Confirmed	Update	NonOwner	Valid	Valid	Available
+Confirmed	Read	Owner	NA	NA	NA
+Confirmed	Update	Owner	Valid	Invalid	NotAvailable

@@ -1,0 +1,8 @@
+go 1.26.0
+
+use (
+	./auth-service
+	./deal-service
+	./payment-service
+	./platform-common
+)

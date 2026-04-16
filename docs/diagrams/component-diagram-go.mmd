@@ -1,0 +1,33 @@
+flowchart LR
+    subgraph Clients
+      ClientUI[Client Web/Mobile]
+      StaffUI[Staff UI]
+    end
+
+    subgraph Sync APIs
+      AUTH[auth-service]
+      DEAL[deal-service]
+      PAY[payment-service]
+    end
+
+    subgraph Async
+      NATS[(NATS Broker)]
+    end
+
+    subgraph Data
+      DB[(PostgreSQL\nschemas: auth/deal/payment)]
+    end
+
+    ClientUI -->|JWT login/register| AUTH
+    ClientUI -->|catalog + bookings| DEAL
+    StaffUI -->|contracts| DEAL
+    StaffUI -->|payments| PAY
+
+    DEAL -->|POST /internal/invoices| PAY
+    PAY -->|publish payment.completed| NATS
+    NATS -->|subscribe payment.completed| DEAL
+    DEAL -->|publish booking.*| NATS
+
+    AUTH --> DB
+    DEAL --> DB
+    PAY --> DB

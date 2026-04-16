@@ -1,0 +1,21 @@
+sequenceDiagram
+    participant Staff
+    participant Deal as dealService
+    participant Payment as paymentService
+    participant DB as PostgreSQL
+    participant Bus as NATS
+
+    Staff->>Deal: POST /api/v1/contracts
+    Deal->>DB: create contract
+    Deal->>Payment: POST /internal/invoices
+    Payment->>DB: create invoice
+    Payment-->>Deal: invoice_id
+    Deal->>DB: attach invoice to contract
+    Deal-->>Staff: contract with invoice_issued
+
+    Staff->>Payment: POST /api/v1/payments
+    Payment->>DB: validate invoice and store payment
+    Payment->>DB: mark invoice paid
+    Payment->>Bus: publish payment.completed
+    Bus-->>Deal: payment.completed
+    Deal->>DB: update contract payment_status=paid
