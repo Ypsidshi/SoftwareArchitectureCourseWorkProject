@@ -50,5 +50,11 @@ coverage/
 ## Node (if used)
 node_modules/
 
-gomodcache/
-gocache/
+gomodcache/*
+gocache/*
+
+.gocache
+.gomodcache
+
+## Temporary document extraction artifacts
+._docx_extract/
