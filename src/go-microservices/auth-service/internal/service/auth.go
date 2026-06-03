@@ -10,6 +10,7 @@ import (
 
 	"coursework/auth-service/internal/domain"
 	"coursework/auth-service/internal/repository"
+
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -29,7 +30,7 @@ type userRepo interface {
 }
 
 type AuthService struct {
-	repo      userRepo
+	repo      userRepo //что будет, если userRepo не будет существовать. AuthService не может существовать. Тогда какая это связь будет? Изучить.
 	jwtSecret []byte
 	tokenTTL  time.Duration
 }

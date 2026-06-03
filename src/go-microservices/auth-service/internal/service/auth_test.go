@@ -33,8 +33,8 @@ func TestRegisterAllowsClientOnly(t *testing.T) {
 		t.Fatalf("expected client registration to succeed, got %v", err)
 	}
 
-	if _, err := svc.Register(context.Background(), "manager@example.com", "Pass1234", "Manager User", "manager"); err != ErrInvalidRole {
-		t.Fatalf("expected ErrInvalidRole for manager registration, got %v", err)
+	if _, err := svc.Register(context.Background(), "admin@example.com", "Pass1234", "Admin User", "admin"); err != ErrInvalidRole {
+		t.Fatalf("expected ErrInvalidRole for admin registration, got %v", err)
 	}
 }
 

@@ -29,16 +29,26 @@ func (r *Repository) Ping(ctx context.Context) error {
 	return r.db.PingContext(ctx)
 }
 
-func (r *Repository) CreateInvoice(ctx context.Context, contractID string, amount float64, currency string) (domain.Invoice, error) {
+func (r *Repository) CreateInvoice(ctx context.Context, contractID, bookingID string, amount float64, currency string) (domain.Invoice, error) {
+	var contractArg, bookingArg any
+	if contractID != "" {
+		contractArg = contractID
+	}
+	if bookingID != "" {
+		bookingArg = bookingID
+	}
+
 	const q = `
-INSERT INTO payment.invoices (contract_id, amount, currency, status)
-VALUES ($1, $2, $3, 'issued')
-RETURNING id, contract_id, amount, currency, status, issued_at, updated_at`
+INSERT INTO payment.invoices (contract_id, booking_id, amount, currency, status)
+VALUES ($1, $2, $3, $4, 'issued')
+RETURNING id, contract_id, booking_id, amount, currency, status, issued_at, updated_at`
 
 	var invoice domain.Invoice
-	err := r.db.QueryRowContext(ctx, q, contractID, amount, currency).Scan(
+	var contractNS, bookingNS sql.NullString
+	err := r.db.QueryRowContext(ctx, q, contractArg, bookingArg, amount, currency).Scan(
 		&invoice.ID,
-		&invoice.ContractID,
+		&contractNS,
+		&bookingNS,
 		&invoice.Amount,
 		&invoice.Currency,
 		&invoice.Status,
@@ -47,6 +57,12 @@ RETURNING id, contract_id, amount, currency, status, issued_at, updated_at`
 	)
 	if err != nil {
 		return domain.Invoice{}, err
+	}
+	if contractNS.Valid {
+		invoice.ContractID = contractNS.String
+	}
+	if bookingNS.Valid {
+		invoice.BookingID = bookingNS.String
 	}
 	return invoice, nil
 }
@@ -79,14 +95,15 @@ func (r *Repository) ProcessPayment(ctx context.Context, in ProcessPaymentInput)
 	}
 
 	const lockInvoiceQuery = `
-SELECT id, contract_id, amount, status
+SELECT id, contract_id, booking_id, amount, status
 FROM payment.invoices
 WHERE id = $1
 FOR UPDATE`
 
-	var invoiceID, contractID, status string
+	var invoiceID, status string
+	var contractNS, bookingNS sql.NullString
 	var invoiceAmount float64
-	err = tx.QueryRowContext(ctx, lockInvoiceQuery, in.InvoiceID).Scan(&invoiceID, &contractID, &invoiceAmount, &status)
+	err = tx.QueryRowContext(ctx, lockInvoiceQuery, in.InvoiceID).Scan(&invoiceID, &contractNS, &bookingNS, &invoiceAmount, &status)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return domain.Payment{}, false, ErrInvoiceNotFound
@@ -101,17 +118,14 @@ FOR UPDATE`
 	if status == "paid" {
 		// Defensive path for cases without idempotency key.
 		const q = `
-SELECT p.id, p.invoice_id, i.contract_id, p.amount, p.status, p.idempotency_key, p.external_ref, p.paid_at, p.created_at
+SELECT p.id, p.invoice_id, i.contract_id, i.booking_id, p.amount, p.status, p.idempotency_key, p.external_ref, p.paid_at, p.created_at
 FROM payment.payments p
 JOIN payment.invoices i ON i.id = p.invoice_id
 WHERE p.invoice_id = $1
 ORDER BY p.created_at DESC
 LIMIT 1`
 		var payment domain.Payment
-		if err := tx.QueryRowContext(ctx, q, in.InvoiceID).Scan(
-			&payment.ID, &payment.InvoiceID, &payment.ContractID, &payment.Amount, &payment.Status,
-			&payment.IdempotencyKey, &payment.ExternalRef, &payment.PaidAt, &payment.CreatedAt,
-		); err != nil {
+		if err := scanPaymentRow(tx.QueryRowContext(ctx, q, in.InvoiceID), &payment); err != nil {
 			return domain.Payment{}, false, err
 		}
 		if err := tx.Commit(); err != nil {
@@ -149,7 +163,12 @@ WHERE id = $1`
 		return domain.Payment{}, false, err
 	}
 
-	payment.ContractID = contractID
+	if contractNS.Valid {
+		payment.ContractID = contractNS.String
+	}
+	if bookingNS.Valid {
+		payment.BookingID = bookingNS.String
+	}
 
 	if err := tx.Commit(); err != nil {
 		return domain.Payment{}, false, err
@@ -159,16 +178,23 @@ WHERE id = $1`
 
 func queryPaymentByIdempotency(ctx context.Context, tx *sql.Tx, idempotencyKey string) (domain.Payment, error) {
 	const q = `
-SELECT p.id, p.invoice_id, i.contract_id, p.amount, p.status, p.idempotency_key, p.external_ref, p.paid_at, p.created_at
+SELECT p.id, p.invoice_id, i.contract_id, i.booking_id, p.amount, p.status, p.idempotency_key, p.external_ref, p.paid_at, p.created_at
 FROM payment.payments p
 JOIN payment.invoices i ON i.id = p.invoice_id
 WHERE p.idempotency_key = $1`
 
 	var payment domain.Payment
-	err := tx.QueryRowContext(ctx, q, idempotencyKey).Scan(
+	err := scanPaymentRow(tx.QueryRowContext(ctx, q, idempotencyKey), &payment)
+	return payment, err
+}
+
+func scanPaymentRow(row *sql.Row, payment *domain.Payment) error {
+	var contractNS, bookingNS sql.NullString
+	err := row.Scan(
 		&payment.ID,
 		&payment.InvoiceID,
-		&payment.ContractID,
+		&contractNS,
+		&bookingNS,
 		&payment.Amount,
 		&payment.Status,
 		&payment.IdempotencyKey,
@@ -176,28 +202,27 @@ WHERE p.idempotency_key = $1`
 		&payment.PaidAt,
 		&payment.CreatedAt,
 	)
-	return payment, err
+	if err != nil {
+		return err
+	}
+	if contractNS.Valid {
+		payment.ContractID = contractNS.String
+	}
+	if bookingNS.Valid {
+		payment.BookingID = bookingNS.String
+	}
+	return nil
 }
 
 func (r *Repository) GetPaymentByID(ctx context.Context, id string) (domain.Payment, error) {
 	const q = `
-SELECT p.id, p.invoice_id, i.contract_id, p.amount, p.status, p.idempotency_key, p.external_ref, p.paid_at, p.created_at
+SELECT p.id, p.invoice_id, i.contract_id, i.booking_id, p.amount, p.status, p.idempotency_key, p.external_ref, p.paid_at, p.created_at
 FROM payment.payments p
 JOIN payment.invoices i ON i.id = p.invoice_id
 WHERE p.id = $1`
 
 	var payment domain.Payment
-	err := r.db.QueryRowContext(ctx, q, id).Scan(
-		&payment.ID,
-		&payment.InvoiceID,
-		&payment.ContractID,
-		&payment.Amount,
-		&payment.Status,
-		&payment.IdempotencyKey,
-		&payment.ExternalRef,
-		&payment.PaidAt,
-		&payment.CreatedAt,
-	)
+	err := scanPaymentRow(r.db.QueryRowContext(ctx, q, id), &payment)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return domain.Payment{}, ErrPaymentNotFound

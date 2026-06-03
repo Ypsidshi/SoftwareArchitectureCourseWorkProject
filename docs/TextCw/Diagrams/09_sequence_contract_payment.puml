@@ -1,0 +1,76 @@
+@startuml
+skinparam backgroundColor white
+skinparam sequenceArrowColor #2C7BB6
+skinparam sequenceParticipantBorderColor #2C7BB6
+skinparam sequenceParticipantBackgroundColor #D0E8FF
+skinparam sequenceLifeLineBorderColor #2C7BB6
+
+title Диаграмма последовательности: оформление договора и проведение платежа
+
+actor "Сотрудник\n(менеджер/бухгалтер)" as Staff
+participant "deal-service\n:8082" as Deal
+participant "payment-service\n:8083" as Payment
+database "PostgreSQL\n(deal.contracts)" as DBDeal
+database "PostgreSQL\n(payment.invoices\npayment.payments)" as DBPay
+queue "NATS" as NATS
+
+== Оформление договора и выставление счёта ==
+
+Staff -> Deal : POST /api/v1/contracts\nAuthorization: Bearer <JWT>\n{resident_id, room_id, manager_id,\nstart_date, end_date, amount, currency}
+Deal -> Deal : AuthMiddleware:\nпроверка роли admin|manager|accountant
+Deal -> Deal : валидация входных данных
+Deal -> DBDeal : INSERT INTO deal.contracts\n(payment_status = invoice_requested)
+DBDeal --> Deal : contract
+
+Deal -> Payment : POST /internal/invoices\nX-Internal-API-Key: <key>\nX-Trace-Id: <trace>\n{contract_id, amount, currency}
+Payment -> Payment : проверка API-ключа
+Payment -> DBPay : INSERT INTO payment.invoices\n(status = issued)
+DBPay --> Payment : invoice
+
+Payment --> Deal : 201 Created\n{invoice_id, status, invoice}
+
+Deal -> DBDeal : UPDATE deal.contracts\nSET invoice_id = ?,\npayment_status = invoice_issued
+DBDeal --> Deal : updated contract
+Deal --> Staff : 201 Created {contract}
+
+== Проведение платежа ==
+
+Staff -> Payment : POST /api/v1/payments\nIdempotency-Key: <key>\n{invoice_id, amount, external_ref}
+
+Payment -> DBPay : проверка idempotency_key\n(SELECT FROM payment.payments)
+
+alt платёж с таким ключом уже существует
+    DBPay --> Payment : existing payment
+    Payment --> Staff : 200 OK {payment, duplicate: true}
+else новый платёж
+    Payment -> DBPay : BEGIN TRANSACTION\n(Serializable isolation)
+    Payment -> DBPay : SELECT FROM payment.invoices\nFOR UPDATE (блокировка)
+    DBPay --> Payment : invoice {amount}
+
+    alt сумма не совпадает
+        Payment --> Staff : 400 Bad Request\n"invalid amount"
+    else сумма совпадает
+        Payment -> DBPay : INSERT INTO payment.payments\n(status = completed)
+        Payment -> DBPay : UPDATE payment.invoices\nSET status = paid
+        Payment -> DBPay : COMMIT
+        DBPay --> Payment : payment
+
+        Payment -> NATS : PUBLISH payment.completed\n{contract_id, invoice_id,\npayment_id, amount, paid_at}
+        Payment --> Staff : 200 OK {payment, duplicate: false}
+    end
+end
+
+== Асинхронное обновление договора ==
+
+NATS -> Deal : SUBSCRIBE payment.completed\n{contract_id, invoice_id, payment_id}
+Deal -> DBDeal : UPDATE deal.contracts\nSET payment_status = paid\nWHERE id = contract_id
+DBDeal --> Deal : updated
+
+== Проверка договора ==
+
+Staff -> Deal : GET /api/v1/contracts/{id}\nAuthorization: Bearer <JWT>
+Deal -> DBDeal : SELECT * FROM deal.contracts
+DBDeal --> Deal : contract {payment_status: paid}
+Deal --> Staff : 200 OK {contract}
+
+@enduml

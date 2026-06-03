@@ -14,7 +14,7 @@ import (
 
 type paymentRepo interface {
 	Ping(ctx context.Context) error
-	CreateInvoice(ctx context.Context, contractID string, amount float64, currency string) (domain.Invoice, error)
+	CreateInvoice(ctx context.Context, contractID, bookingID string, amount float64, currency string) (domain.Invoice, error)
 	ProcessPayment(ctx context.Context, in repository.ProcessPaymentInput) (domain.Payment, bool, error)
 	GetPaymentByID(ctx context.Context, id string) (domain.Payment, error)
 }
@@ -28,6 +28,7 @@ type PaymentService struct {
 
 type CreateInvoiceInput struct {
 	ContractID string
+	BookingID  string
 	Amount     float64
 	Currency   string
 }
@@ -53,8 +54,10 @@ func (s *PaymentService) Ping(ctx context.Context) error {
 }
 
 func (s *PaymentService) CreateInvoice(ctx context.Context, in CreateInvoiceInput) (domain.Invoice, error) {
-	if in.ContractID == "" {
-		return domain.Invoice{}, fmt.Errorf("contract_id is required")
+	hasContract := strings.TrimSpace(in.ContractID) != ""
+	hasBooking := strings.TrimSpace(in.BookingID) != ""
+	if hasContract == hasBooking {
+		return domain.Invoice{}, fmt.Errorf("exactly one of contract_id or booking_id is required")
 	}
 	if in.Amount <= 0 {
 		return domain.Invoice{}, fmt.Errorf("amount must be positive")
@@ -63,7 +66,7 @@ func (s *PaymentService) CreateInvoice(ctx context.Context, in CreateInvoiceInpu
 	if currency == "" {
 		currency = "RUB"
 	}
-	return s.repo.CreateInvoice(ctx, in.ContractID, in.Amount, currency)
+	return s.repo.CreateInvoice(ctx, strings.TrimSpace(in.ContractID), strings.TrimSpace(in.BookingID), in.Amount, currency)
 }
 
 func (s *PaymentService) ProcessPayment(ctx context.Context, traceID string, in ProcessPaymentInput) (domain.Payment, bool, error) {
@@ -88,13 +91,19 @@ func (s *PaymentService) ProcessPayment(ctx context.Context, traceID string, in 
 		return payment, isDuplicate, nil
 	}
 
-	envelope, err := events.NewEnvelope("payment.completed", s.serviceName, traceID, map[string]any{
-		"contract_id": payment.ContractID,
-		"invoice_id":  payment.InvoiceID,
-		"payment_id":  payment.ID,
-		"amount":      payment.Amount,
-		"paid_at":     payment.PaidAt,
-	})
+	payload := map[string]any{
+		"invoice_id": payment.InvoiceID,
+		"payment_id": payment.ID,
+		"amount":     payment.Amount,
+		"paid_at":    payment.PaidAt,
+	}
+	if payment.ContractID != "" {
+		payload["contract_id"] = payment.ContractID
+	}
+	if payment.BookingID != "" {
+		payload["booking_id"] = payment.BookingID
+	}
+	envelope, err := events.NewEnvelope("payment.completed", s.serviceName, traceID, payload)
 	if err != nil {
 		s.logger.Error("failed to encode payment event", slog.String("error", err.Error()))
 		return payment, false, nil

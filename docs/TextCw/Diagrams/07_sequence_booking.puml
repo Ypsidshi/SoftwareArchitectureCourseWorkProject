@@ -1,0 +1,64 @@
+@startuml
+skinparam backgroundColor white
+skinparam sequenceArrowColor #2C7BB6
+skinparam sequenceParticipantBorderColor #2C7BB6
+skinparam sequenceParticipantBackgroundColor #D0E8FF
+skinparam sequenceLifeLineBorderColor #2C7BB6
+
+title Диаграмма последовательности: регистрация, вход и создание бронирования
+
+actor "Клиент" as Client
+participant "deal-service\n:8082" as Deal
+participant "auth-service\n:8081" as Auth
+database "PostgreSQL\n(auth.users)" as DBAuth
+database "PostgreSQL\n(deal.bookings)" as DBDeal
+queue "NATS" as NATS
+
+== Регистрация ==
+
+Client -> Deal : POST /api/auth/register\n{email, password, full_name}
+Deal -> Auth : POST /api/v1/users/register\n(proxy, X-Trace-Id)
+Auth -> Auth : валидация email, пароля, имени
+Auth -> Auth : bcrypt.Hash(password)
+Auth -> DBAuth : INSERT INTO auth.users
+DBAuth --> Auth : user
+Auth --> Deal : 201 Created {user}
+Deal --> Client : 201 Created {user}
+
+== Вход в систему ==
+
+Client -> Deal : POST /api/auth/login\n{email, password}
+Deal -> Auth : POST /api/v1/auth/login\n(proxy, X-Trace-Id)
+Auth -> DBAuth : SELECT * FROM auth.users\nWHERE email = ?
+DBAuth --> Auth : user record
+Auth -> Auth : bcrypt.Compare(password, hash)
+Auth -> Auth : jwt.Sign(claims, secret)
+Auth --> Deal : 200 OK {access_token, user}
+Deal --> Client : 200 OK {access_token, user}
+
+== Просмотр каталога ==
+
+Client -> Deal : GET /api/sanatoriums\n?city=Сочи&check_in=...&check_out=...
+Deal -> DBDeal : SELECT sanatoriums\nWHERE city = ?\nAND available_places > guests
+DBDeal --> Deal : []Sanatorium, total
+Deal --> Client : 200 OK {items, total, page}
+
+== Создание бронирования ==
+
+Client -> Deal : POST /api/bookings\nAuthorization: Bearer <JWT>\n{sanatorium_id, check_in, check_out, guests}
+Deal -> Deal : AuthMiddleware:\nпарсинг JWT, проверка роли client
+Deal -> Deal : валидация дат\n(check_out > check_in, guests > 0)
+Deal -> DBDeal : проверка вместимости\n(SELECT COUNT(*) пересекающихся броней)
+DBDeal --> Deal : occupied_places
+Deal -> Deal : свободные места >= guests?
+
+alt недостаточно мест
+    Deal --> Client : 409 Conflict\n"no available places"
+else мест достаточно
+    Deal -> DBDeal : INSERT INTO deal.bookings\n(status = confirmed)
+    DBDeal --> Deal : booking
+    Deal -> NATS : PUBLISH booking.confirmed\n{booking_id, client_id, sanatorium_id, ...}
+    Deal --> Client : 201 Created {booking}
+end
+
+@enduml

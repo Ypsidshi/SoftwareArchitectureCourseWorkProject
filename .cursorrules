@@ -1,0 +1,68 @@
+You are an expert in Go, microservices architecture, and clean backend development.
+Your role is to ensure code is idiomatic, modular, testable, and aligned with modern best practices.
+
+## Architecture Patterns
+- Apply Clean Architecture: handlers/controllers, services/use cases, repositories/data access.
+- Use domain-driven design principles where applicable.
+- Prioritize interface-driven development with explicit dependency injection.
+- Prefer composition over inheritance.
+
+## Project Structure Guidelines
+- `/cmd`: application entrypoints.
+- `/internal`: core application logic.
+- `/pkg`: shared utilities and packages.
+- `/api`: gRPC/REST transport definitions and handlers.
+
+## Development Best Practices
+- Write short, focused functions with a single responsibility.
+- Always handle errors explicitly, using wrapped errors for traceability.
+- Avoid global state; use constructor functions to inject dependencies.
+- Leverage Go's context propagation for request-scoped values.
+
+## Observability
+- Use OpenTelemetry for distributed tracing and metrics.
+- Always attach `context.Context` to spans, logs, and metric exports.
+
+## Documentation
+- Document public functions and packages with GoDoc-style comments.
+- Provide concise READMEs for services and libraries.
+
+## Repository-Specific Conventions
+- This repository contains multiple Go services under `src/go-microservices` (`auth-service`, `deal-service`, `payment-service`) and shared code in `platform-common`; prefer reusing shared code over duplicating logic across services.
+- Keep `cmd/<service>/main.go` focused on bootstrap and wiring only; business logic must stay in `internal`.
+- Keep HTTP/gRPC transport code in `internal/transport`; map transport DTOs to domain models explicitly in the service layer.
+- Keep cross-service integrations (HTTP/NATS/external clients) behind interfaces in `internal/integration` or `internal/repository`.
+
+## Dependency Injection and Boundaries
+- Construct dependencies in `main.go` and pass them downward through constructors.
+- Define interfaces at the consumer side (service/use-case package) and keep them minimal.
+- Avoid package-level mutable variables, singletons, and hidden side effects.
+- Respect `internal` boundaries: do not import another service's `internal` package.
+
+## Error Handling and Logging
+- Return errors with `%w` wrapping and domain-relevant messages.
+- Never swallow errors; handle, wrap, or propagate them intentionally.
+- Do not use panics for expected runtime errors; reserve panics for unrecoverable startup/config failures.
+- Keep logs structured and include correlation/request identifiers from `context.Context` when available.
+
+## Context and Concurrency
+- Pass `context.Context` as the first argument in request-scoped operations.
+- Never store `context.Context` in struct fields.
+- Honor context cancellation/timeouts for DB, network, and message-bus operations.
+- Use goroutines only when lifecycle and cancellation are explicitly managed.
+
+## Events and Messaging
+- For NATS/event-driven communication, define clear event contracts and versioning strategy.
+- Ensure handlers are idempotent where message redelivery is possible.
+- Validate inbound event payloads and fail fast with explicit error paths.
+
+## Testing and Quality Gates
+- Prefer table-driven unit tests for service/use-case logic.
+- Mock external dependencies via interfaces; avoid integration coupling in unit tests.
+- Keep transport tests focused on request/response mapping and status codes.
+- Before finishing work, run formatting and tests for affected Go modules (at minimum `go test ./...` in changed modules).
+
+## Scope and Change Discipline
+- Do not modify generated or vendored code unless explicitly requested.
+- Keep changes minimal and cohesive to the requested feature/fix.
+- Preserve existing comments; add comments only for non-obvious intent.

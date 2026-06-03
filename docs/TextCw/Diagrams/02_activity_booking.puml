@@ -1,0 +1,63 @@
+@startuml
+skinparam backgroundColor white
+skinparam activityBorderColor #2C7BB6
+skinparam activityBackgroundColor #D0E8FF
+skinparam activityDiamondBorderColor #2C7BB6
+skinparam activityDiamondBackgroundColor #FFF8DC
+
+title Диаграмма активности: процесс бронирования
+
+start
+
+:Клиент открывает приложение;
+
+if (Зарегистрирован?) then (нет)
+    :Регистрация\n(email, пароль, имя);
+    :Сохранение пользователя\nв auth.users;
+endif
+
+:Ввод учётных данных;
+:Вход в систему;
+:Получение JWT-токена;
+
+:Просмотр каталога санаториев;
+note right: Фильтрация по городу,\nмед. профилю, цене,\nдатам и вместимости
+
+:Выбор санатория;
+:Просмотр детальной информации;
+
+if (Санаторий доступен\nна нужные даты?) then (нет)
+    :Выбор других дат\nили санатория;
+    stop
+endif
+
+:Ввод параметров бронирования\n(даты, число гостей);
+
+if (Даты корректны?\ncheck_in < check_out?) then (нет)
+    :Ошибка 400 Bad Request;
+    stop
+endif
+
+if (Вместимость\nдостаточна?) then (нет)
+    :Ошибка 409 Conflict;
+    stop
+endif
+
+:Создание бронирования\n(статус: confirmed);
+:Публикация события\nbooking.confirmed в NATS;
+:Возврат подтверждения клиенту;
+
+:Просмотр списка бронирований;
+
+if (Нужно изменить\nбронирование?) then (да)
+    :Обновление параметров\n(даты, число гостей);
+    :Повторная проверка\nдоступности;
+endif
+
+if (Нужно отменить\nбронирование?) then (да)
+    :Отмена бронирования;
+    :Публикация события\nbooking.cancelled в NATS;
+endif
+
+stop
+@enduml

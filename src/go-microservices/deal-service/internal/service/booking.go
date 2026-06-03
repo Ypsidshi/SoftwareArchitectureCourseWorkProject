@@ -30,10 +30,11 @@ type bookingRepo interface {
 }
 
 type BookingService struct {
-	repo        bookingRepo
-	publisher   events.Publisher
-	serviceName string
-	logger      *slog.Logger
+	repo          bookingRepo
+	paymentClient any
+	publisher     events.Publisher
+	serviceName   string
+	logger        *slog.Logger
 }
 
 type ListSanatoriumsInput struct {
@@ -86,12 +87,13 @@ type ListBookingsResult struct {
 	TotalPages int              `json:"total_pages"`
 }
 
-func NewBookingService(repo bookingRepo, publisher events.Publisher, serviceName string, logger *slog.Logger) *BookingService {
+func NewBookingService(repo bookingRepo, paymentClient any, publisher events.Publisher, serviceName string, logger *slog.Logger) *BookingService {
 	return &BookingService{
-		repo:        repo,
-		publisher:   publisher,
-		serviceName: serviceName,
-		logger:      logger,
+		repo:          repo,
+		paymentClient: paymentClient,
+		publisher:     publisher,
+		serviceName:   serviceName,
+		logger:        logger,
 	}
 }
 

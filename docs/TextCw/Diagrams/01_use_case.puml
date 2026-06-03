@@ -1,0 +1,56 @@
+@startuml
+skinparam actorStyle awesome
+skinparam backgroundColor white
+skinparam usecaseBorderColor black
+skinparam usecaseBackgroundColor white
+skinparam usecaseFontColor black
+skinparam actorBorderColor black
+skinparam actorBackgroundColor white
+skinparam actorFontColor black
+skinparam arrowColor black
+skinparam linetype ortho
+left to right direction
+
+actor "Клиент" as Client
+
+rectangle "Информационная система бронирования" {
+    usecase "Регистрация" as UC1
+    usecase "Вход в систему" as UC2
+    usecase "Восстановление\nпароля" as UC3
+    usecase "Просмотр каталога\nсанаториев" as UC4
+    usecase "Поиск и фильтрация\nсанаториев" as UC5
+    usecase "Просмотр деталей\nсанатория" as UC6
+    usecase "Создание\nбронирования" as UC7
+    usecase "Проверка доступности\nмест" as UC8
+    usecase "Расчёт стоимости\nбронирования" as UC9
+    usecase "Оплата\nбронирования" as UC10
+    usecase "Просмотр списка\nбронирований" as UC11
+    usecase "Изменение\nбронирования" as UC12
+    usecase "Отмена\nбронирования" as UC13
+}
+
+Client --> UC1
+Client --> UC2
+Client --> UC3
+Client --> UC4
+Client --> UC5
+Client --> UC6
+Client --> UC7
+Client --> UC10
+Client --> UC11
+Client --> UC12
+Client --> UC13
+
+UC3 ..> UC2 : <<extend>>
+UC5 ..> UC4 : <<extend>>
+
+UC7 ..> UC2 : <<include>>
+UC7 ..> UC8 : <<include>>
+UC7 ..> UC9 : <<include>>
+UC7 ..> UC10 : <<include>>
+
+UC11 ..> UC2 : <<include>>
+UC12 ..> UC2 : <<include>>
+UC13 ..> UC2 : <<include>>
+
+@enduml

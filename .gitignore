@@ -49,6 +49,11 @@ coverage/
 
 ## Node (if used)
 node_modules/
+src/frontend/dist/
+
+## Local IDE / agent
+.claude/
+.cursor/
 
 gomodcache/*
 gocache/*

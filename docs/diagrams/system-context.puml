@@ -1,0 +1,16 @@
+@startuml
+title C4 Model Level 1 - System Context
+
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor "Client" as Client
+actor "Staff\n(Manager/Accountant/Admin)" as Staff
+
+rectangle "Sanatorium Booking and Contracts Platform\n(SoftwareArchitectureCourseWorkProject)" as System
+
+Client --> System : Register, login, browse catalog,\ncreate/manage bookings
+Staff --> System : Manage contracts,\ncontrol payments,\nperform operational actions
+
+@enduml

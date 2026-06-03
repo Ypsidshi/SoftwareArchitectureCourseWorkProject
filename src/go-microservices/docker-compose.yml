@@ -39,6 +39,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
     ports:
       - "8081:8081"
 
@@ -63,7 +69,13 @@ services:
       nats:
         condition: service_started
       payment-service:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8082/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
     ports:
       - "8082:8082"
 
@@ -84,8 +96,25 @@ services:
         condition: service_healthy
       nats:
         condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8083/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
     ports:
       - "8083:8083"
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: coursework-frontend
+    depends_on:
+      deal-service:
+        condition: service_healthy
+    ports:
+      - "3000:80"
 
 volumes:
   postgres_data:

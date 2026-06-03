@@ -186,24 +186,14 @@ func (r *Repository) CreateBooking(ctx context.Context, in NewBooking) (domain.B
 	const insertQuery = `
 INSERT INTO deal.bookings (id, client_id, sanatorium_id, check_in, check_out, guests, status)
 VALUES ($1, $2, $3, $4, $5, $6, 'confirmed')
-RETURNING id, client_id, sanatorium_id, check_in, check_out, guests, status, created_at, updated_at, cancelled_at`
+RETURNING ` + bookingRowColumns
 
 	id := uuid.NewString()
 	var booking domain.Booking
-	if err := tx.QueryRowContext(ctx, insertQuery,
+	row := tx.QueryRowContext(ctx, insertQuery,
 		id, in.ClientID, in.SanatoriumID, in.CheckIn, in.CheckOut, in.Guests,
-	).Scan(
-		&booking.ID,
-		&booking.ClientID,
-		&booking.SanatoriumID,
-		&booking.CheckIn,
-		&booking.CheckOut,
-		&booking.Guests,
-		&booking.Status,
-		&booking.CreatedAt,
-		&booking.UpdatedAt,
-		&booking.CancelledAt,
-	); err != nil {
+	)
+	if err := scanBooking(row, &booking); err != nil {
 		return domain.Booking{}, err
 	}
 
@@ -262,21 +252,11 @@ FOR UPDATE`,
 UPDATE deal.bookings
 SET check_in = $3, check_out = $4, guests = $5, updated_at = NOW()
 WHERE id = $1 AND client_id = $2
-RETURNING id, client_id, sanatorium_id, check_in, check_out, guests, status, created_at, updated_at, cancelled_at`
+RETURNING ` + bookingRowColumns
 
 	var booking domain.Booking
-	if err := tx.QueryRowContext(ctx, updateQuery, in.ID, in.ClientID, in.CheckIn, in.CheckOut, in.Guests).Scan(
-		&booking.ID,
-		&booking.ClientID,
-		&booking.SanatoriumID,
-		&booking.CheckIn,
-		&booking.CheckOut,
-		&booking.Guests,
-		&booking.Status,
-		&booking.CreatedAt,
-		&booking.UpdatedAt,
-		&booking.CancelledAt,
-	); err != nil {
+	row := tx.QueryRowContext(ctx, updateQuery, in.ID, in.ClientID, in.CheckIn, in.CheckOut, in.Guests)
+	if err := scanBooking(row, &booking); err != nil {
 		return domain.Booking{}, err
 	}
 
@@ -291,21 +271,10 @@ func (r *Repository) CancelBooking(ctx context.Context, bookingID, clientID stri
 UPDATE deal.bookings
 SET status = 'cancelled', cancelled_at = NOW(), updated_at = NOW()
 WHERE id = $1 AND client_id = $2 AND status <> 'cancelled'
-RETURNING id, client_id, sanatorium_id, check_in, check_out, guests, status, created_at, updated_at, cancelled_at`
+RETURNING ` + bookingRowColumns
 
 	var booking domain.Booking
-	err := r.db.QueryRowContext(ctx, query, bookingID, clientID).Scan(
-		&booking.ID,
-		&booking.ClientID,
-		&booking.SanatoriumID,
-		&booking.CheckIn,
-		&booking.CheckOut,
-		&booking.Guests,
-		&booking.Status,
-		&booking.CreatedAt,
-		&booking.UpdatedAt,
-		&booking.CancelledAt,
-	)
+	err := scanBooking(r.db.QueryRowContext(ctx, query, bookingID, clientID), &booking)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return domain.Booking{}, ErrBookingNotFound
@@ -316,31 +285,7 @@ RETURNING id, client_id, sanatorium_id, check_in, check_out, guests, status, cre
 }
 
 func (r *Repository) GetBookingByID(ctx context.Context, bookingID, clientID string) (domain.Booking, error) {
-	const query = `
-SELECT id, client_id, sanatorium_id, check_in, check_out, guests, status, created_at, updated_at, cancelled_at
-FROM deal.bookings
-WHERE id = $1 AND client_id = $2`
-
-	var booking domain.Booking
-	err := r.db.QueryRowContext(ctx, query, bookingID, clientID).Scan(
-		&booking.ID,
-		&booking.ClientID,
-		&booking.SanatoriumID,
-		&booking.CheckIn,
-		&booking.CheckOut,
-		&booking.Guests,
-		&booking.Status,
-		&booking.CreatedAt,
-		&booking.UpdatedAt,
-		&booking.CancelledAt,
-	)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return domain.Booking{}, ErrBookingNotFound
-		}
-		return domain.Booking{}, err
-	}
-	return booking, nil
+	return r.GetBookingForClient(ctx, bookingID, clientID)
 }
 
 func (r *Repository) ListBookingsByClient(ctx context.Context, clientID string, page, pageSize int) ([]domain.Booking, int, error) {
@@ -351,10 +296,10 @@ func (r *Repository) ListBookingsByClient(ctx context.Context, clientID string, 
 	}
 
 	const listQuery = `
-SELECT id, client_id, sanatorium_id, check_in, check_out, guests, status, created_at, updated_at, cancelled_at
-FROM deal.bookings
-WHERE client_id = $1
-ORDER BY created_at DESC
+SELECT ` + bookingSelectColumns + `
+FROM deal.bookings b
+WHERE b.client_id = $1
+ORDER BY b.created_at DESC
 LIMIT $2 OFFSET $3`
 
 	rows, err := r.db.QueryContext(ctx, listQuery, clientID, pageSize, (page-1)*pageSize)
@@ -366,18 +311,7 @@ LIMIT $2 OFFSET $3`
 	items := make([]domain.Booking, 0, pageSize)
 	for rows.Next() {
 		var booking domain.Booking
-		if err := rows.Scan(
-			&booking.ID,
-			&booking.ClientID,
-			&booking.SanatoriumID,
-			&booking.CheckIn,
-			&booking.CheckOut,
-			&booking.Guests,
-			&booking.Status,
-			&booking.CreatedAt,
-			&booking.UpdatedAt,
-			&booking.CancelledAt,
-		); err != nil {
+		if err := scanBooking(rows, &booking); err != nil {
 			return nil, 0, err
 		}
 		items = append(items, booking)
@@ -492,6 +426,42 @@ func scanSanatorium(scanner sanatoriumScanner) (domain.Sanatorium, error) {
 	item.Amenities = decodeStringSlice(amenitiesRaw)
 	item.ImageURLs = decodeStringSlice(imagesRaw)
 	item.MedicalProfiles = decodeStringSlice(profilesRaw)
+	if latitude.Valid {
+		item.Latitude = &latitude.Float64
+	}
+	if longitude.Valid {
+		item.Longitude = &longitude.Float64
+	}
+	return item, nil
+}
+
+func scanSanatoriumBase(scanner sanatoriumScanner) (domain.Sanatorium, error) {
+	var item domain.Sanatorium
+	var amenitiesRaw, imagesRaw []byte
+	var latitude, longitude sql.NullFloat64
+	err := scanner.Scan(
+		&item.ID,
+		&item.Name,
+		&item.Description,
+		&item.City,
+		&item.Address,
+		&item.DistanceToSeaKM,
+		&amenitiesRaw,
+		&imagesRaw,
+		&item.PricePerNight,
+		&item.TotalPlaces,
+		&latitude,
+		&longitude,
+		&item.CreatedAt,
+		&item.UpdatedAt,
+	)
+	if err != nil {
+		return domain.Sanatorium{}, err
+	}
+
+	item.Amenities = decodeStringSlice(amenitiesRaw)
+	item.ImageURLs = decodeStringSlice(imagesRaw)
+	item.MedicalProfiles = []string{}
 	if latitude.Valid {
 		item.Latitude = &latitude.Float64
 	}

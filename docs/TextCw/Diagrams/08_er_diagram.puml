@@ -1,0 +1,115 @@
+@startuml
+skinparam backgroundColor white
+skinparam entityBorderColor #2C7BB6
+skinparam entityBackgroundColor #D0E8FF
+skinparam entityHeaderBackgroundColor #2C7BB6
+skinparam entityHeaderFontColor white
+
+title ER-диаграмма: схемы auth, deal, payment
+
+package "schema: auth" #EEF6FF {
+    entity "auth.users" as Users {
+        * id : UUID <<PK>>
+        --
+        * email : TEXT <<UNIQUE>>
+        * full_name : TEXT
+        * role : TEXT <<CHECK: admin|manager|accountant|client>>
+        * password_hash : TEXT
+        * is_active : BOOLEAN
+        created_at : TIMESTAMPTZ
+        updated_at : TIMESTAMPTZ
+    }
+
+    entity "auth.refresh_tokens" as Tokens {
+        * id : UUID <<PK>>
+        --
+        * user_id : UUID <<FK>>
+        * token_hash : TEXT <<UNIQUE>>
+        expires_at : TIMESTAMPTZ
+        revoked_at : TIMESTAMPTZ
+        created_at : TIMESTAMPTZ
+    }
+}
+
+package "schema: deal" #FFF8EE {
+    entity "deal.sanatoriums" as Sanatoriums {
+        * id : UUID <<PK>>
+        --
+        * name : TEXT
+        description : TEXT
+        * city : TEXT
+        address : TEXT
+        distance_to_sea_km : NUMERIC
+        * price_per_night : NUMERIC
+        * total_places : INT
+        medical_profiles : TEXT[]
+        image_urls : TEXT[]
+        created_at : TIMESTAMPTZ
+        updated_at : TIMESTAMPTZ
+    }
+
+    entity "deal.bookings" as Bookings {
+        * id : UUID <<PK>>
+        --
+        * client_id : UUID <<FK>>
+        * sanatorium_id : UUID <<FK>>
+        * check_in : DATE
+        * check_out : DATE
+        * guests : INT
+        * status : TEXT
+        created_at : TIMESTAMPTZ
+        updated_at : TIMESTAMPTZ
+        cancelled_at : TIMESTAMPTZ
+    }
+
+    entity "deal.contracts" as Contracts {
+        * id : UUID <<PK>>
+        --
+        * resident_id : UUID
+        * room_id : UUID
+        * manager_id : UUID
+        * start_date : DATE
+        * end_date : DATE
+        * amount : NUMERIC(12,2)
+        * currency : CHAR(3)
+        * status : TEXT
+        * payment_status : TEXT
+        payment_error : TEXT
+        invoice_id : UUID <<UNIQUE, FK>>
+        created_at : TIMESTAMPTZ
+        updated_at : TIMESTAMPTZ
+    }
+}
+
+package "schema: payment" #EEFFEE {
+    entity "payment.invoices" as Invoices {
+        * id : UUID <<PK>>
+        --
+        * contract_id : UUID <<UNIQUE>>
+        * amount : NUMERIC(12,2)
+        * currency : CHAR(3)
+        * status : TEXT <<CHECK: issued|paid|overdue|cancelled>>
+        issued_at : TIMESTAMPTZ
+        updated_at : TIMESTAMPTZ
+    }
+
+    entity "payment.payments" as Payments {
+        * id : UUID <<PK>>
+        --
+        * invoice_id : UUID <<FK>>
+        * amount : NUMERIC(12,2)
+        * status : TEXT <<CHECK: completed|failed|refunded>>
+        * idempotency_key : TEXT <<UNIQUE>>
+        external_ref : TEXT
+        paid_at : TIMESTAMPTZ
+        created_at : TIMESTAMPTZ
+    }
+}
+
+Users ||--o{ Tokens : "user_id"
+Users ||--o{ Bookings : "client_id"
+Sanatoriums ||--o{ Bookings : "sanatorium_id"
+Contracts ||--|| Invoices : "invoice_id"
+Invoices ||--o{ Payments : "invoice_id"
+
+@enduml

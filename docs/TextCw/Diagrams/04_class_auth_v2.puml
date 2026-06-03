@@ -1,0 +1,110 @@
+@startuml
+skinparam backgroundColor white
+skinparam classBorderColor black
+skinparam classBackgroundColor white
+skinparam classHeaderBackgroundColor #CCCCCC
+skinparam classHeaderFontColor black
+skinparam classFontColor black
+skinparam arrowColor black
+skinparam linetype ortho
+
+title Диаграмма классов: auth-service
+
+class AuthHandler {
+    - auth : IAuthService
+    - logger : *slog.Logger
+    + register(w, r)
+    + login(w, r)
+    + live(w, r)
+    + ready(w, r)
+    + metrics(w, r)
+}
+
+class RegisterRequest {
+    + Email : string
+    + Password : string
+    + FullName : string
+    + Role : string
+}
+
+class LoginRequest {
+    + Email : string
+    + Password : string
+}
+
+class LoginResponse {
+    + AccessToken : string
+    + User : UserDTO
+}
+
+class UserDTO {
+    + ID : string
+    + Email : string
+    + FullName : string
+    + Role : string
+}
+
+class User {
+    + ID : string
+    + Email : string
+    + FullName : string
+    + Role : string
+    + PasswordHash : string
+    + CreatedAt : time.Time
+}
+
+class AuthService {
+    - repo : IUserRepository
+    - jwtSecret : string
+    - tokenTTL : time.Duration
+    + Register(ctx, req) : User, error
+    + Login(ctx, req) : string, User, error
+    + Ping(ctx) : error
+}
+
+interface IAuthService {
+    + Register(ctx, req) : User, error
+    + Login(ctx, req) : string, User, error
+    + Ping(ctx) : error
+}
+
+interface IUserRepository {
+    + CreateUser(ctx, user) : User, error
+    + GetByEmail(ctx, email) : User, error
+    + Ping(ctx) : error
+}
+
+class UserRepository {
+    - db : *pgxpool.Pool
+    + CreateUser(ctx, user) : User, error
+    + GetByEmail(ctx, email) : User, error
+    + Ping(ctx) : error
+}
+
+' AuthHandler хранит ссылку на интерфейс сервиса как поле — ассоциация
+AuthHandler --> IAuthService
+
+' DTO-объекты создаются и уничтожаются внутри методов — зависимость
+AuthHandler ..> RegisterRequest
+AuthHandler ..> LoginRequest
+AuthHandler ..> LoginResponse
+
+' UserDTO — неотделимая часть LoginResponse (создаётся вместе, живёт вместе) — композиция
+LoginResponse *--> UserDTO
+
+' AuthService реализует контракт IAuthService
+AuthService ..|> IAuthService
+
+' AuthService хранит репозиторий как поле — ассоциация
+AuthService --> IUserRepository
+
+' UserRepository реализует контракт IUserRepository
+UserRepository ..|> IUserRepository
+
+' AuthService создаёт/возвращает User из методов, но не хранит коллекцию — зависимость
+AuthService ..> User
+
+' UserRepository оперирует User как параметрами/возвратами методов — зависимость
+UserRepository ..> User
+
+@enduml

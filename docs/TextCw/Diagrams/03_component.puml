@@ -1,0 +1,94 @@
+@startuml
+skinparam backgroundColor white
+skinparam componentBorderColor black
+skinparam componentBackgroundColor white
+skinparam componentFontColor black
+skinparam databaseBorderColor black
+skinparam databaseBackgroundColor white
+skinparam databaseFontColor black
+skinparam queueBorderColor black
+skinparam queueBackgroundColor white
+skinparam queueFontColor black
+skinparam arrowColor black
+skinparam nodeBorderColor black
+skinparam nodeBackgroundColor white
+skinparam packageBorderColor black
+skinparam packageBackgroundColor white
+skinparam linetype ortho
+
+title Диаграмма компонентов системы
+
+node "Клиентская часть" {
+    [Web-приложение\n(браузер)] as WebApp
+}
+
+node "Серверная часть" {
+    package "auth-service :8081" {
+        [AuthHandler] as AH
+        [AuthService] as AS
+        [UserRepository] as AR
+    }
+
+    package "deal-service :8082" {
+        [DealHandler] as DH
+        [BookingService] as BS
+        [DealService] as DS
+        [AuthClient] as AC
+        [PaymentClient] as PC
+        [BookingRepository\n+ DealRepository] as DR
+        [PaymentCompletedConsumer] as PCC
+    }
+
+    package "payment-service :8083" {
+        [PaymentHandler] as PH
+        [PaymentService] as PS
+        [PaymentRepository] as PR
+        [PaymentPublisher] as PP
+    }
+
+    package "platform-common" {
+        [Middleware\n(auth, metrics, trace)] as MW
+        [NATS Publisher] as NP
+        [Logger (slog)] as LOG
+    }
+}
+
+database "PostgreSQL :5432" {
+    [schema: auth] as DBAuth
+    [schema: deal] as DBDeal
+    [schema: payment] as DBPayment
+}
+
+queue "NATS :4222" as NATS
+
+WebApp --> DH : REST HTTP
+WebApp --> AH : REST HTTP
+
+DH --> AC
+AC --> AH : REST HTTP
+
+DH --> BS
+DH --> DS
+BS --> DR
+DS --> DR
+DS --> PC
+PC --> PH : REST HTTP\n/internal/invoices
+
+PH --> PS
+PS --> PR
+PS --> PP
+PP --> NATS : payment.completed
+
+PCC --> NATS : payment.completed
+PCC --> DS
+
+BS --> NATS : booking.confirmed\nbooking.cancelled
+
+AR --> DBAuth
+DR --> DBDeal
+PR --> DBPayment
+
+AH --> AS
+AS --> AR
+
+@enduml

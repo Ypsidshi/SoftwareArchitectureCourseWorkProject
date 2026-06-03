@@ -1,0 +1,125 @@
+@startuml
+skinparam backgroundColor white
+skinparam classBorderColor black
+skinparam classBackgroundColor white
+skinparam classHeaderBackgroundColor #CCCCCC
+skinparam classHeaderFontColor black
+skinparam classFontColor black
+skinparam arrowColor black
+skinparam linetype ortho
+
+title Диаграмма классов: payment-service
+
+class PaymentHandler {
+    - service : IPaymentService
+    - internalAPIKey : string
+    - logger : *slog.Logger
+    + createInvoice(w, r)
+    + processPayment(w, r)
+    + getPayment(w, r)
+    + live(w, r)
+    + ready(w, r)
+    + metrics(w, r)
+}
+
+class CreateInvoiceRequest {
+    + ContractID : string
+    + Amount : float64
+    + Currency : string
+}
+
+class ProcessPaymentRequest {
+    + InvoiceID : string
+    + Amount : float64
+    + ExternalRef : string
+}
+
+class InvoiceResponse {
+    + InvoiceID : string
+    + Status : string
+    + Invoice : Invoice
+}
+
+class PaymentResponse {
+    + Payment : Payment
+    + Duplicate : bool
+}
+
+class Invoice {
+    + ID : string
+    + ContractID : string
+    + Amount : float64
+    + Currency : string
+    + Status : string
+    + IssuedAt : time.Time
+}
+
+class Payment {
+    + ID : string
+    + InvoiceID : string
+    + Amount : float64
+    + Status : string
+    + IdempotencyKey : string
+    + ExternalRef : string
+    + PaidAt : time.Time
+}
+
+class PaymentService {
+    - repo : IPaymentRepository
+    - publisher : Publisher
+    - serviceName : string
+    - logger : *slog.Logger
+    + CreateInvoice(ctx, req) : Invoice, error
+    + ProcessPayment(ctx, idemKey, req) : Payment, bool, error
+    + GetPayment(ctx, id) : Payment, error
+    + Ping(ctx) : error
+}
+
+interface IPaymentService {
+    + CreateInvoice(ctx, req) : Invoice, error
+    + ProcessPayment(ctx, idemKey, req) : Payment, bool, error
+    + GetPayment(ctx, id) : Payment, error
+    + Ping(ctx) : error
+}
+
+interface IPaymentRepository {
+    + CreateInvoice(ctx, invoice) : Invoice, error
+    + GetInvoiceByID(ctx, id) : Invoice, error
+    + ProcessPayment(ctx, idemKey, req) : Payment, bool, error
+    + GetPaymentByID(ctx, id) : Payment, error
+    + Ping(ctx) : error
+}
+
+class PaymentRepository {
+    - db : *sql.DB
+    + CreateInvoice(ctx, invoice) : Invoice, error
+    + GetInvoiceByID(ctx, id) : Invoice, error
+    + ProcessPayment(ctx, idemKey, req) : Payment, bool, error
+    + GetPaymentByID(ctx, id) : Payment, error
+    + Ping(ctx) : error
+}
+
+class InternalAPIKeyMiddleware {
+    + Middleware(apiKey string) : func
+}
+
+class Publisher {
+    + Publish(ctx, subject, payload) : error
+}
+
+PaymentHandler --> IPaymentService
+PaymentHandler --> InternalAPIKeyMiddleware
+PaymentHandler ..> CreateInvoiceRequest
+PaymentHandler ..> ProcessPaymentRequest
+PaymentHandler ..> InvoiceResponse
+PaymentHandler ..> PaymentResponse
+InvoiceResponse --> Invoice
+PaymentResponse --> Payment
+PaymentService ..|> IPaymentService
+PaymentService --> IPaymentRepository
+PaymentRepository ..|> IPaymentRepository
+PaymentService --> Publisher
+PaymentService --> "0..*" Invoice : issues
+Invoice "1" --> "0..*" Payment : paid by
+
+@enduml

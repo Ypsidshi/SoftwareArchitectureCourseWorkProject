@@ -51,8 +51,10 @@ func (h *Handler) Router(registry *prometheus.Registry) http.Handler {
 
 	r.Route("/api", func(api chi.Router) {
 		api.Post("/auth/login", h.loginViaAuthService)
+		api.Post("/auth/register", h.registerViaAuthService)
 		api.Get("/sanatoriums", h.listSanatoriums)
 		api.Get("/sanatoriums/{id}", h.getSanatoriumByID)
+		api.Get("/medical-profiles", h.listMedicalProfiles)
 
 		api.Group(func(authorized chi.Router) {
 			authorized.Use(ClientAuthMiddleware(h.jwtSecret, h.logger))
@@ -61,17 +63,25 @@ func (h *Handler) Router(registry *prometheus.Registry) http.Handler {
 			authorized.Get("/bookings/{id}", h.getBookingByID)
 			authorized.Put("/bookings/{id}", h.updateBooking)
 			authorized.Delete("/bookings/{id}", h.cancelBooking)
+			authorized.Post("/bookings/{id}/checkout", h.checkoutBooking)
+			authorized.Post("/bookings/{id}/pay", h.payBooking)
+		})
+
+		api.Route("/admin", func(admin chi.Router) {
+			admin.Use(AuthMiddleware(h.jwtSecret, h.logger, "admin"))
+
+			admin.Get("/bookings", h.listBookingsAdmin)
+			admin.Delete("/bookings/{id}", h.adminCancelBooking)
+			admin.Post("/bookings/{id}/checkout", h.adminCheckoutBooking)
+			admin.Post("/bookings/{id}/pay", h.adminPayBooking)
+
+			admin.Get("/sanatoriums", h.listSanatoriumsAdmin)
+			admin.Post("/sanatoriums", h.createSanatoriumAdmin)
+			admin.Put("/sanatoriums/{id}", h.updateSanatoriumAdmin)
+			admin.Delete("/sanatoriums/{id}", h.deleteSanatoriumAdmin)
 		})
 	})
 
-	r.Route("/api/v1", func(api chi.Router) {
-		api.Group(func(authorized chi.Router) {
-			authorized.Use(AuthMiddleware(h.jwtSecret, h.logger, "admin", "manager", "accountant"))
-			authorized.Post("/contracts", h.createContract)
-			authorized.Get("/contracts/{id}", h.getContract)
-			authorized.Patch("/contracts/{id}/status", h.updateStatus)
-		})
-	})
 	return r
 }
 
@@ -87,7 +97,7 @@ type loginRequest struct {
 // @Accept json
 // @Produce json
 // @Param payload body loginRequest true "Login payload"
-// @Success 200 {object} map[string]any
+// @Success 200 {object} loginResponse
 // @Failure 400 {object} map[string]any
 // @Failure 401 {object} map[string]any
 // @Failure 500 {object} map[string]any
@@ -108,20 +118,78 @@ func (h *Handler) loginViaAuthService(w http.ResponseWriter, r *http.Request) {
 		Password: req.Password,
 	})
 	if err != nil {
-		errText := err.Error()
-		if strings.Contains(errText, " 401: ") || strings.Contains(errText, " 400: ") {
-			httpx.WriteJSON(w, http.StatusUnauthorized, map[string]any{"error": "invalid credentials"})
+		var authErr *authclient.AuthError
+		if errors.As(err, &authErr) {
+			httpx.WriteJSON(w, authErr.StatusCode, map[string]any{"error": authErr.Message})
 			return
 		}
-		h.logger.Error("auth login proxy failed", slog.String("error", errText))
+		h.logger.Error("auth login proxy failed", slog.String("error", err.Error()))
 		httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to authenticate"})
 		return
 	}
 
+	user := resp.User
+	if user == nil {
+		user = map[string]any{}
+	}
+	delete(user, "password_hash")
+	delete(user, "passwordHash")
+
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{
 		"access_token": resp.AccessToken,
-		"user":         resp.User,
+		"user":         user,
 	})
+}
+
+type registerRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	FullName string `json:"full_name"`
+	Role     string `json:"role"`
+}
+
+// registerViaAuthService godoc
+// @Summary Register new client
+// @Description Registers a new user with role=client via auth-service.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param payload body registerRequest true "Registration payload"
+// @Success 201 {object} map[string]any "User object (id, email, full_name, role, created_at)"
+// @Failure 400 {object} map[string]any
+// @Failure 409 {object} map[string]any
+// @Failure 500 {object} map[string]any
+// @Router /api/auth/register [post]
+func (h *Handler) registerViaAuthService(w http.ResponseWriter, r *http.Request) {
+	var req registerRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"error": "invalid json"})
+		return
+	}
+	if strings.TrimSpace(req.Email) == "" || strings.TrimSpace(req.Password) == "" || strings.TrimSpace(req.FullName) == "" {
+		httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"error": "email, password and full_name are required"})
+		return
+	}
+	req.Role = "client"
+
+	resp, err := h.authClient.Register(r.Context(), httpx.TraceIDFromContext(r.Context()), authclient.RegisterRequest{
+		Email:    req.Email,
+		Password: req.Password,
+		FullName: req.FullName,
+		Role:     req.Role,
+	})
+	if err != nil {
+		var authErr *authclient.AuthError
+		if errors.As(err, &authErr) {
+			httpx.WriteJSON(w, authErr.StatusCode, map[string]any{"error": authErr.Message})
+			return
+		}
+		h.logger.Error("auth register proxy failed", slog.String("error", err.Error()))
+		httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": "failed to register"})
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusCreated, resp)
 }
 
 type createContractRequest struct {
@@ -134,6 +202,20 @@ type createContractRequest struct {
 	Currency   string  `json:"currency"`
 }
 
+// createContract godoc
+// @Summary Create contract (admin)
+// @Description Creates contract and invoice. manager_id defaults to JWT subject if omitted.
+// @Tags admin-contracts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param payload body createContractRequest true "Contract payload"
+// @Success 201 {object} domain.Contract
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 502 {object} map[string]any
+// @Router /api/admin/contracts [post]
 func (h *Handler) createContract(w http.ResponseWriter, r *http.Request) {
 	var req createContractRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -152,10 +234,15 @@ func (h *Handler) createContract(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	managerID := strings.TrimSpace(req.ManagerID)
+	if managerID == "" {
+		managerID = ClientIDFromContext(r.Context())
+	}
+
 	contract, err := h.dealService.CreateContract(r.Context(), httpx.TraceIDFromContext(r.Context()), service.CreateContractInput{
 		ResidentID: req.ResidentID,
 		RoomID:     req.RoomID,
-		ManagerID:  req.ManagerID,
+		ManagerID:  managerID,
 		StartDate:  startDate,
 		EndDate:    endDate,
 		Amount:     req.Amount,
@@ -177,6 +264,17 @@ func (h *Handler) createContract(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusCreated, contract)
 }
 
+// getContract godoc
+// @Summary Get contract by ID (admin)
+// @Tags admin-contracts
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Contract ID (UUID)"
+// @Success 200 {object} domain.Contract
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Router /api/admin/contracts/{id} [get]
 func (h *Handler) getContract(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	item, err := h.dealService.GetContract(r.Context(), id)
@@ -196,6 +294,20 @@ type updateStatusRequest struct {
 	Status string `json:"status"`
 }
 
+// updateStatus godoc
+// @Summary Update contract status (admin)
+// @Tags admin-contracts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Contract ID (UUID)"
+// @Param payload body updateStatusRequest true "New status"
+// @Success 200 {object} statusUpdatedResponse
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Router /api/admin/contracts/{id}/status [patch]
 func (h *Handler) updateStatus(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	var req updateStatusRequest
@@ -238,6 +350,24 @@ func (h *Handler) ready(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"status": "ready"})
+}
+
+// listMedicalProfiles godoc
+// @Summary List medical profile names
+// @Description Returns catalog profile names for filters and admin forms.
+// @Tags sanatoriums
+// @Produce json
+// @Success 200 {object} medicalProfilesResponse
+// @Failure 500 {object} map[string]any
+// @Router /api/medical-profiles [get]
+func (h *Handler) listMedicalProfiles(w http.ResponseWriter, r *http.Request) {
+	names, err := h.bookingService.ListMedicalProfileNames(r.Context())
+	if err != nil {
+		h.logger.Error("list medical profiles failed", slog.String("error", err.Error()))
+		httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": "internal error"})
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"items": names})
 }
 
 // listSanatoriums godoc
@@ -584,6 +714,91 @@ func (h *Handler) cancelBooking(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, booking)
+}
+
+// checkoutBooking godoc
+// @Summary Create invoice for booking (client)
+// @Description Calculates amount from nights × price_per_night and creates payment invoice.
+// @Tags bookings
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Booking ID (UUID)"
+// @Success 200 {object} domain.Booking
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Failure 409 {object} map[string]any
+// @Router /api/bookings/{id}/checkout [post]
+func (h *Handler) checkoutBooking(w http.ResponseWriter, r *http.Request) {
+	clientID := ClientIDFromContext(r.Context())
+	bookingID := chi.URLParam(r, "id")
+
+	booking, err := h.bookingService.CheckoutBooking(r.Context(), httpx.TraceIDFromContext(r.Context()), bookingID, clientID)
+	if err != nil {
+		writeBookingPaymentError(w, h, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, booking)
+}
+
+// payBooking godoc
+// @Summary Pay booking invoice (client)
+// @Tags bookings
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Booking ID (UUID)"
+// @Param Idempotency-Key header string false "Idempotency key"
+// @Success 200 {object} service.PayBookingResult
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Failure 409 {object} map[string]any
+// @Router /api/bookings/{id}/pay [post]
+func (h *Handler) payBooking(w http.ResponseWriter, r *http.Request) {
+	clientID := ClientIDFromContext(r.Context())
+	bookingID := chi.URLParam(r, "id")
+	idempotencyKey := r.Header.Get("Idempotency-Key")
+
+	result, err := h.bookingService.PayBooking(r.Context(), httpx.TraceIDFromContext(r.Context()), bookingID, clientID, idempotencyKey)
+	if err != nil {
+		writeBookingPaymentError(w, h, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, result)
+}
+
+// listBookingsAdmin godoc
+// @Summary List all bookings (admin)
+// @Tags admin-bookings
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "Page" default(1)
+// @Param page_size query int false "Page size" default(15)
+// @Param status query string false "Booking status: confirmed, cancelled"
+// @Param payment_status query string false "Payment status: unpaid, invoice_issued, invoice_failed, paid"
+// @Param city query string false "Filter by sanatorium city"
+// @Param sanatorium_id query string false "Filter by sanatorium UUID"
+// @Success 200 {object} service.ListBookingsResult
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Router /api/admin/bookings [get]
+func (h *Handler) listBookingsAdmin(w http.ResponseWriter, r *http.Request) {
+	page := intQueryOrDefault(r, "page", 1)
+	pageSize := intQueryOrDefault(r, "page_size", 15)
+
+	result, err := h.bookingService.ListBookingsAdmin(r.Context(), page, pageSize, service.AdminBookingsFilter{
+		Status:        strings.TrimSpace(r.URL.Query().Get("status")),
+		PaymentStatus: strings.TrimSpace(r.URL.Query().Get("payment_status")),
+		City:          strings.TrimSpace(r.URL.Query().Get("city")),
+		SanatoriumID:  strings.TrimSpace(r.URL.Query().Get("sanatorium_id")),
+	})
+	if err != nil {
+		h.logger.Error("list admin bookings failed", slog.String("error", err.Error()))
+		httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": "internal error"})
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, result)
 }
 
 func intQueryOrDefault(r *http.Request, key string, fallback int) int {

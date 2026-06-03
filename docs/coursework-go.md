@@ -6,7 +6,7 @@ The current implementation contains a client-facing booking flow for a sanatoriu
 2. Client personal cabinet for booking management.
 3. JWT-based access control for booking actions (role: `client`).
 4. Async event publishing for booking lifecycle (`booking.confirmed`, `booking.updated`, `booking.cancelled`).
-5. Contract creation and payment processing for staff roles (`admin`, `manager`, `accountant`).
+5. Contract creation and payment processing for role `admin`.
 
 ## Services
 1. `auth-service`
@@ -25,7 +25,7 @@ Authorized client (`Authorization: Bearer <jwt>`):
 4. `PUT /api/bookings/{id}`
 5. `DELETE /api/bookings/{id}`
 
-Authorized staff (`Authorization: Bearer <jwt>`, roles: `admin`, `manager`, `accountant`):
+Authorized admin (`Authorization: Bearer <jwt>`, role: `admin`):
 1. `POST /api/v1/contracts`
 2. `GET /api/v1/contracts/{id}`
 3. `PATCH /api/v1/contracts/{id}/status`
@@ -45,7 +45,7 @@ New SQL migration:
 1. `sql/postgres/01_booking_catalog.sql`
 
 ### `auth` schema updates
-1. `auth.users.role` now allows: `admin`, `manager`, `accountant`, `client`.
+1. `auth.users.role` now allows: `admin`, `client`.
 
 ### `deal` schema additions
 1. `deal.medical_profiles`

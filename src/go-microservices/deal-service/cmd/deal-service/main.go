@@ -24,14 +24,15 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-// @title Sanatorium Booking API
-// @version 1.0
-// @description Deal service with sanatorium catalog and client bookings.
+// @title Sanatorium Booking API (deal-service)
+// @version 1.1
+// @description Public catalog and client bookings; auth proxy; admin API for bookings, contracts and sanatoriums. Payment is internal (deal → payment-service).
 // @BasePath /
 // @schemes http https
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
+// @description JWT from POST /api/auth/login. Prefix: Bearer
 func main() {
 	cfg := config.Load()
 	logger := obs.NewLogger(cfg.ServiceName, cfg.LogLevel)
@@ -59,16 +60,20 @@ func main() {
 		logger.Warn("nats is unavailable, async updates are disabled", slog.String("error", err.Error()))
 	} else {
 		publisher = events.NewNATSPublisher(natsConn)
-		if _, subErr := eventstransport.SubscribePaymentCompleted(natsConn, logger, dealService); subErr != nil {
-			logger.Warn("failed to subscribe payment.completed", slog.String("error", subErr.Error()))
-		}
 		natsConnClose = natsConn.Close
 	}
 	if natsConnClose != nil {
 		defer natsConnClose()
 	}
 
-	bookingService := service.NewBookingService(repo, publisher, cfg.ServiceName, logger)
+	bookingService := service.NewBookingService(repo, paymentClient, publisher, cfg.ServiceName, logger)
+	if natsConn != nil {
+		paymentRouter := &service.PaymentEventsRouter{Deal: dealService, Booking: bookingService}
+		if _, subErr := eventstransport.SubscribePaymentCompleted(natsConn, logger, paymentRouter); subErr != nil {
+			logger.Warn("failed to subscribe payment.completed", slog.String("error", subErr.Error()))
+		}
+	}
+
 	handler := httptransport.NewHandler(dealService, bookingService, authClient, cfg.JWTSecret, logger)
 
 	router := handler.Router(metrics.Registry)

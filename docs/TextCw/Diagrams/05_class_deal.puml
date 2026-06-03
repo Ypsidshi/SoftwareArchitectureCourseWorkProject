@@ -1,0 +1,161 @@
+@startuml
+skinparam backgroundColor white
+skinparam classBorderColor black
+skinparam classBackgroundColor white
+skinparam classHeaderBackgroundColor #CCCCCC
+skinparam classHeaderFontColor black
+skinparam classFontColor black
+skinparam arrowColor black
+skinparam linetype ortho
+
+title Диаграмма классов: deal-service
+
+class DealHandler {
+    - bookingService : IBookingService
+    - dealService : IDealService
+    - authClient : AuthClient
+    - jwtSecret : string
+    - logger : *slog.Logger
+    + proxyRegister(w, r)
+    + proxyLogin(w, r)
+    + listSanatoriums(w, r)
+    + getSanatorium(w, r)
+    + createBooking(w, r)
+    + listBookings(w, r)
+    + getBooking(w, r)
+    + updateBooking(w, r)
+    + cancelBooking(w, r)
+    + createContract(w, r)
+    + getContract(w, r)
+    + updateContractStatus(w, r)
+}
+
+class BookingService {
+    - repo : IDealRepository
+    - publisher : Publisher
+    + ListSanatoriums(ctx, filter) : ListResult, error
+    + GetSanatoriumDetails(ctx, id, dates) : Details, error
+    + CreateBooking(ctx, clientID, req) : Booking, error
+    + UpdateBooking(ctx, id, clientID, req) : Booking, error
+    + CancelBooking(ctx, id, clientID) : Booking, error
+    + ListBookings(ctx, clientID, page) : ListResult, error
+    + GetBooking(ctx, id, clientID) : Booking, error
+}
+
+class DealService {
+    - repo : IDealRepository
+    - paymentClient : PaymentClient
+    - logger : *slog.Logger
+    + CreateContract(ctx, req) : Contract, error
+    + GetContract(ctx, id) : Contract, error
+    + UpdateStatus(ctx, id, status) : error
+    + HandlePaymentCompleted(ctx, event) : error
+}
+
+interface IBookingService {
+    + ListSanatoriums(ctx, filter) : ListResult, error
+    + GetSanatoriumDetails(ctx, id, dates) : Details, error
+    + CreateBooking(ctx, clientID, req) : Booking, error
+    + UpdateBooking(ctx, id, clientID, req) : Booking, error
+    + CancelBooking(ctx, id, clientID) : Booking, error
+    + ListBookings(ctx, clientID, page) : ListResult, error
+    + GetBooking(ctx, id, clientID) : Booking, error
+}
+
+interface IDealService {
+    + CreateContract(ctx, req) : Contract, error
+    + GetContract(ctx, id) : Contract, error
+    + UpdateStatus(ctx, id, status) : error
+    + HandlePaymentCompleted(ctx, event) : error
+}
+
+interface IDealRepository {
+    + ListSanatoriums(ctx, filter) : []Sanatorium, int, error
+    + GetSanatoriumByID(ctx, id) : Sanatorium, error
+    + CheckAvailability(ctx, id, in, out, guests) : bool, error
+    + CreateBooking(ctx, booking) : Booking, error
+    + UpdateBooking(ctx, booking) : Booking, error
+    + CancelBooking(ctx, id) : Booking, error
+    + GetBookingByID(ctx, id) : Booking, error
+    + ListBookings(ctx, clientID, page) : []Booking, int, error
+    + CreateContract(ctx, contract) : Contract, error
+    + GetContractByID(ctx, id) : Contract, error
+    + AttachInvoice(ctx, contractID, invoiceID) : error
+    + UpdatePaymentStatus(ctx, contractID, status) : error
+}
+
+class DealRepository {
+    - db : *sql.DB
+    + ListSanatoriums(ctx, filter) : []Sanatorium, int, error
+    + GetSanatoriumByID(ctx, id) : Sanatorium, error
+    + CheckAvailability(ctx, id, in, out, guests) : bool, error
+    + CreateBooking(ctx, booking) : Booking, error
+    + UpdateBooking(ctx, booking) : Booking, error
+    + CancelBooking(ctx, id) : Booking, error
+    + GetBookingByID(ctx, id) : Booking, error
+    + ListBookings(ctx, clientID, page) : []Booking, int, error
+    + CreateContract(ctx, contract) : Contract, error
+    + GetContractByID(ctx, id) : Contract, error
+    + AttachInvoice(ctx, contractID, invoiceID) : error
+    + UpdatePaymentStatus(ctx, contractID, status) : error
+}
+
+class AuthClient {
+    - baseURL : string
+    - httpClient : *http.Client
+    + Login(ctx, traceID, req) : LoginResponse, error
+    + Register(ctx, traceID, req) : UserResponse, error
+}
+
+class PaymentClient {
+    - baseURL : string
+    - apiKey : string
+    - httpClient : *http.Client
+    + CreateInvoice(ctx, traceID, req) : InvoiceResponse, error
+}
+
+class Sanatorium {
+    + ID : string
+    + Name : string
+    + City : string
+    + PricePerNight : float64
+    + TotalPlaces : int
+    + MedicalProfiles : []string
+    + DistanceToSeaKM : float64
+}
+
+class Booking {
+    + ID : string
+    + ClientID : string
+    + SanatoriumID : string
+    + CheckIn : time.Time
+    + CheckOut : time.Time
+    + Guests : int
+    + Status : string
+}
+
+class Contract {
+    + ID : string
+    + ResidentID : string
+    + Amount : float64
+    + Currency : string
+    + Status : string
+    + PaymentStatus : string
+    + InvoiceID : *string
+}
+
+DealHandler --> IBookingService
+DealHandler --> IDealService
+DealHandler --> AuthClient
+BookingService ..|> IBookingService
+DealService ..|> IDealService
+BookingService --> IDealRepository
+DealService --> IDealRepository
+DealRepository ..|> IDealRepository
+DealService --> PaymentClient
+BookingService --> "0..*" Booking : manages
+BookingService --> "0..*" Sanatorium : reads
+DealService --> "0..*" Contract : manages
+Contract --> "0..1" PaymentClient : invoice via API
+
+@enduml

@@ -1,6 +1,0 @@
-@Payment.Api_HostAddress = http://localhost:5125
-
-GET {{Payment.Api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

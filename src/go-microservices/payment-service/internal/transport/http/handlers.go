@@ -43,6 +43,7 @@ func (h *Handler) Router(registry *prometheus.Registry) http.Handler {
 
 type createInvoiceRequest struct {
 	ContractID string  `json:"contract_id"`
+	BookingID  string  `json:"booking_id"`
 	Amount     float64 `json:"amount"`
 	Currency   string  `json:"currency"`
 }
@@ -61,6 +62,7 @@ func (h *Handler) createInvoice(w http.ResponseWriter, r *http.Request) {
 
 	invoice, err := h.service.CreateInvoice(r.Context(), service.CreateInvoiceInput{
 		ContractID: req.ContractID,
+		BookingID:  req.BookingID,
 		Amount:     req.Amount,
 		Currency:   req.Currency,
 	})

@@ -1,0 +1,147 @@
+@startuml
+skinparam backgroundColor white
+skinparam classBorderColor black
+skinparam classBackgroundColor white
+skinparam classHeaderBackgroundColor #CCCCCC
+skinparam classHeaderFontColor black
+skinparam classFontColor black
+skinparam arrowColor black
+skinparam linetype ortho
+
+title Диаграмма классов: payment-service
+
+class PaymentHandler {
+    - service : IPaymentService
+    - internalAPIKey : string
+    - logger : *slog.Logger
+    + createInvoice(w, r)
+    + processPayment(w, r)
+    + getPayment(w, r)
+    + live(w, r)
+    + ready(w, r)
+    + metrics(w, r)
+}
+
+class CreateInvoiceRequest {
+    + ContractID : string
+    + Amount : float64
+    + Currency : string
+}
+
+class ProcessPaymentRequest {
+    + InvoiceID : string
+    + Amount : float64
+    + ExternalRef : string
+}
+
+class InvoiceResponse {
+    + InvoiceID : string
+    + Status : string
+    + Invoice : Invoice
+}
+
+class PaymentResponse {
+    + Payment : Payment
+    + Duplicate : bool
+}
+
+class Invoice {
+    + ID : string
+    + ContractID : string
+    + Amount : float64
+    + Currency : string
+    + Status : string
+    + IssuedAt : time.Time
+}
+
+class Payment {
+    + ID : string
+    + InvoiceID : string
+    + Amount : float64
+    + Status : string
+    + IdempotencyKey : string
+    + ExternalRef : string
+    + PaidAt : time.Time
+}
+
+class PaymentService {
+    - repo : IPaymentRepository
+    - publisher : Publisher
+    - serviceName : string
+    - logger : *slog.Logger
+    + CreateInvoice(ctx, req) : Invoice, error
+    + ProcessPayment(ctx, idemKey, req) : Payment, bool, error
+    + GetPayment(ctx, id) : Payment, error
+    + Ping(ctx) : error
+}
+
+interface IPaymentService {
+    + CreateInvoice(ctx, req) : Invoice, error
+    + ProcessPayment(ctx, idemKey, req) : Payment, bool, error
+    + GetPayment(ctx, id) : Payment, error
+    + Ping(ctx) : error
+}
+
+interface IPaymentRepository {
+    + CreateInvoice(ctx, invoice) : Invoice, error
+    + GetInvoiceByID(ctx, id) : Invoice, error
+    + ProcessPayment(ctx, idemKey, req) : Payment, bool, error
+    + GetPaymentByID(ctx, id) : Payment, error
+    + Ping(ctx) : error
+}
+
+class PaymentRepository {
+    - db : *sql.DB
+    + CreateInvoice(ctx, invoice) : Invoice, error
+    + GetInvoiceByID(ctx, id) : Invoice, error
+    + ProcessPayment(ctx, idemKey, req) : Payment, bool, error
+    + GetPaymentByID(ctx, id) : Payment, error
+    + Ping(ctx) : error
+}
+
+class InternalAPIKeyMiddleware {
+    + Middleware(apiKey string) : func
+}
+
+class Publisher {
+    + Publish(ctx, subject, payload) : error
+}
+
+' PaymentHandler хранит сервис как поле — ассоциация
+PaymentHandler --> IPaymentService
+
+' Middleware применяется при регистрации роутов, не хранится как поле — зависимость
+PaymentHandler ..> InternalAPIKeyMiddleware
+
+' DTO-объекты создаются и уничтожаются внутри методов — зависимость
+PaymentHandler ..> CreateInvoiceRequest
+PaymentHandler ..> ProcessPaymentRequest
+PaymentHandler ..> InvoiceResponse
+PaymentHandler ..> PaymentResponse
+
+' Invoice — неотделимая часть InvoiceResponse (обёртка вокруг доменного объекта) — композиция
+InvoiceResponse *--> Invoice
+
+' Payment — неотделимая часть PaymentResponse (обёртка вокруг доменного объекта) — композиция
+PaymentResponse *--> Payment
+
+' PaymentService реализует контракт
+PaymentService ..|> IPaymentService
+
+' PaymentService хранит репозиторий как поле — ассоциация
+PaymentService --> IPaymentRepository
+
+' PaymentRepository реализует контракт
+PaymentRepository ..|> IPaymentRepository
+
+' Publisher — инфраструктурная часть сервиса, создаётся вместе — композиция
+PaymentService *--> Publisher
+
+' PaymentService создаёт/возвращает объекты из методов, не хранит коллекции — зависимость
+PaymentService ..> Invoice
+PaymentService ..> Payment
+
+' Invoice агрегирует Payments: платежи привязаны к Invoice, но записи в БД независимы (нет CASCADE DELETE) — агрегация
+Invoice "1" o--> "0..*" Payment
+
+@enduml

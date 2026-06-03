@@ -1,29 +1,74 @@
 basePath: /
 definitions:
-  domain.Booking:
+  coursework_deal-service_internal_domain.Booking:
     properties:
+      amount:
+        type: number
       cancelled_at:
         type: string
       check_in:
         type: string
       check_out:
         type: string
+      client_email:
+        type: string
       client_id:
         type: string
       created_at:
+        type: string
+      currency:
         type: string
       guests:
         type: integer
       id:
         type: string
+      invoice_id:
+        type: string
+      payment_error:
+        type: string
+      payment_status:
+        type: string
       sanatorium_id:
+        type: string
+      sanatorium_name:
         type: string
       status:
         type: string
       updated_at:
         type: string
     type: object
-  domain.Sanatorium:
+  coursework_deal-service_internal_domain.Contract:
+    properties:
+      amount:
+        type: number
+      created_at:
+        type: string
+      currency:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: string
+      invoice_id:
+        type: string
+      manager_id:
+        type: string
+      payment_error:
+        type: string
+      payment_status:
+        type: string
+      resident_id:
+        type: string
+      room_id:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  coursework_deal-service_internal_domain.Sanatorium:
     properties:
       address:
         type: string
@@ -62,7 +107,81 @@ definitions:
       updated_at:
         type: string
     type: object
-  httptransport.createBookingRequest:
+  coursework_deal-service_internal_service.ListBookingsResult:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/coursework_deal-service_internal_domain.Booking'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  coursework_deal-service_internal_service.ListContractsResult:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/coursework_deal-service_internal_domain.Contract'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  coursework_deal-service_internal_service.ListSanatoriumsAdminResult:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/coursework_deal-service_internal_domain.Sanatorium'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  coursework_deal-service_internal_service.ListSanatoriumsResult:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/coursework_deal-service_internal_domain.Sanatorium'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  coursework_deal-service_internal_service.PayBookingResult:
+    properties:
+      booking:
+        $ref: '#/definitions/coursework_deal-service_internal_domain.Booking'
+      duplicate:
+        type: boolean
+    type: object
+  coursework_deal-service_internal_service.SanatoriumDetailsResult:
+    properties:
+      available:
+        type: boolean
+      sanatorium:
+        $ref: '#/definitions/coursework_deal-service_internal_domain.Sanatorium'
+    type: object
+  internal_transport_http.createBookingRequest:
     properties:
       check_in:
         type: string
@@ -73,14 +192,100 @@ definitions:
       sanatorium_id:
         type: string
     type: object
-  httptransport.loginRequest:
+  internal_transport_http.createContractRequest:
+    properties:
+      amount:
+        type: number
+      currency:
+        type: string
+      end_date:
+        type: string
+      manager_id:
+        type: string
+      resident_id:
+        type: string
+      room_id:
+        type: string
+      start_date:
+        type: string
+    type: object
+  internal_transport_http.deletedResponse:
+    properties:
+      deleted:
+        type: boolean
+    type: object
+  internal_transport_http.loginRequest:
     properties:
       email:
         type: string
       password:
         type: string
     type: object
-  httptransport.updateBookingRequest:
+  internal_transport_http.loginResponse:
+    properties:
+      access_token:
+        type: string
+      user:
+        additionalProperties: {}
+        type: object
+    type: object
+  internal_transport_http.medicalProfilesResponse:
+    properties:
+      items:
+        items:
+          type: string
+        type: array
+    type: object
+  internal_transport_http.registerRequest:
+    properties:
+      email:
+        type: string
+      full_name:
+        type: string
+      password:
+        type: string
+      role:
+        type: string
+    type: object
+  internal_transport_http.sanatoriumBody:
+    properties:
+      address:
+        type: string
+      amenities:
+        items:
+          type: string
+        type: array
+      city:
+        type: string
+      description:
+        type: string
+      distance_to_sea_km:
+        type: number
+      image_urls:
+        items:
+          type: string
+        type: array
+      latitude:
+        type: number
+      longitude:
+        type: number
+      medical_profiles:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      price_per_night:
+        type: number
+      total_places:
+        type: integer
+    type: object
+  internal_transport_http.statusUpdatedResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  internal_transport_http.updateBookingRequest:
     properties:
       check_in:
         type: string
@@ -89,49 +294,477 @@ definitions:
       guests:
         type: integer
     type: object
-  service.ListBookingsResult:
+  internal_transport_http.updateStatusRequest:
     properties:
-      items:
-        items:
-          $ref: '#/definitions/domain.Booking'
-        type: array
-      page:
-        type: integer
-      page_size:
-        type: integer
-      total:
-        type: integer
-      total_pages:
-        type: integer
-    type: object
-  service.ListSanatoriumsResult:
-    properties:
-      items:
-        items:
-          $ref: '#/definitions/domain.Sanatorium'
-        type: array
-      page:
-        type: integer
-      page_size:
-        type: integer
-      total:
-        type: integer
-      total_pages:
-        type: integer
-    type: object
-  service.SanatoriumDetailsResult:
-    properties:
-      available:
-        type: boolean
-      sanatorium:
-        $ref: '#/definitions/domain.Sanatorium'
+      status:
+        type: string
     type: object
 info:
   contact: {}
-  description: Deal service with sanatorium catalog and client bookings.
-  title: Sanatorium Booking API
-  version: "1.0"
+  description: Public catalog and client bookings; auth proxy; admin API for bookings,
+    contracts and sanatoriums. Payment is internal (deal → payment-service).
+  title: Sanatorium Booking API (deal-service)
+  version: "1.1"
 paths:
+  /api/admin/bookings:
+    get:
+      parameters:
+      - default: 1
+        description: Page
+        in: query
+        name: page
+        type: integer
+      - default: 15
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: 'Booking status: confirmed, cancelled'
+        in: query
+        name: status
+        type: string
+      - description: 'Payment status: unpaid, invoice_issued, invoice_failed, paid'
+        in: query
+        name: payment_status
+        type: string
+      - description: Filter by sanatorium city
+        in: query
+        name: city
+        type: string
+      - description: Filter by sanatorium UUID
+        in: query
+        name: sanatorium_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/coursework_deal-service_internal_service.ListBookingsResult'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List all bookings (admin)
+      tags:
+      - admin-bookings
+  /api/admin/bookings/{id}:
+    delete:
+      parameters:
+      - description: Booking ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/coursework_deal-service_internal_domain.Booking'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Cancel booking (admin)
+      tags:
+      - admin-bookings
+  /api/admin/bookings/{id}/checkout:
+    post:
+      parameters:
+      - description: Booking ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/coursework_deal-service_internal_domain.Booking'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Issue invoice for booking (admin)
+      tags:
+      - admin-bookings
+  /api/admin/bookings/{id}/pay:
+    post:
+      parameters:
+      - description: Booking ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Idempotency key
+        in: header
+        name: Idempotency-Key
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/coursework_deal-service_internal_service.PayBookingResult'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Pay booking invoice (admin)
+      tags:
+      - admin-bookings
+  /api/admin/contracts:
+    get:
+      parameters:
+      - default: 1
+        description: Page
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Contract status
+        in: query
+        name: status
+        type: string
+      - description: Payment status
+        in: query
+        name: payment_status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/coursework_deal-service_internal_service.ListContractsResult'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List contracts (admin)
+      tags:
+      - admin-contracts
+    post:
+      consumes:
+      - application/json
+      description: Creates contract and invoice. manager_id defaults to JWT subject
+        if omitted.
+      parameters:
+      - description: Contract payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_http.createContractRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/coursework_deal-service_internal_domain.Contract'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "502":
+          description: Bad Gateway
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create contract (admin)
+      tags:
+      - admin-contracts
+  /api/admin/contracts/{id}:
+    get:
+      parameters:
+      - description: Contract ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/coursework_deal-service_internal_domain.Contract'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get contract by ID (admin)
+      tags:
+      - admin-contracts
+  /api/admin/contracts/{id}/pay:
+    post:
+      parameters:
+      - description: Contract ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Idempotency key
+        in: header
+        name: Idempotency-Key
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/coursework_deal-service_internal_domain.Contract'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Pay contract invoice (admin)
+      tags:
+      - admin-contracts
+  /api/admin/contracts/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Contract ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New status
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_http.updateStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_http.statusUpdatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update contract status (admin)
+      tags:
+      - admin-contracts
+  /api/admin/sanatoriums:
+    get:
+      parameters:
+      - default: 1
+        description: Page
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/coursework_deal-service_internal_service.ListSanatoriumsAdminResult'
+      security:
+      - BearerAuth: []
+      summary: List sanatoriums (admin)
+      tags:
+      - admin-sanatoriums
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sanatorium
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_http.sanatoriumBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/coursework_deal-service_internal_domain.Sanatorium'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create sanatorium (admin)
+      tags:
+      - admin-sanatoriums
+  /api/admin/sanatoriums/{id}:
+    delete:
+      description: Fails with 409 if active confirmed bookings exist.
+      parameters:
+      - description: Sanatorium ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_http.deletedResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete sanatorium (admin)
+      tags:
+      - admin-sanatoriums
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sanatorium ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Sanatorium
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_http.sanatoriumBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/coursework_deal-service_internal_domain.Sanatorium'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update sanatorium (admin)
+      tags:
+      - admin-sanatoriums
   /api/auth/login:
     post:
       consumes:
@@ -143,15 +776,14 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/httptransport.loginRequest'
+          $ref: '#/definitions/internal_transport_http.loginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/internal_transport_http.loginResponse'
         "400":
           description: Bad Request
           schema:
@@ -168,6 +800,44 @@ paths:
             additionalProperties: true
             type: object
       summary: Login and get JWT token
+      tags:
+      - auth
+  /api/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new user with role=client via auth-service.
+      parameters:
+      - description: Registration payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/internal_transport_http.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User object (id, email, full_name, role, created_at)
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Register new client
       tags:
       - auth
   /api/bookings:
@@ -190,7 +860,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.ListBookingsResult'
+            $ref: '#/definitions/coursework_deal-service_internal_service.ListBookingsResult'
         "401":
           description: Unauthorized
           schema:
@@ -221,14 +891,14 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/httptransport.createBookingRequest'
+          $ref: '#/definitions/internal_transport_http.createBookingRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/domain.Booking'
+            $ref: '#/definitions/coursework_deal-service_internal_domain.Booking'
         "400":
           description: Bad Request
           schema:
@@ -279,7 +949,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domain.Booking'
+            $ref: '#/definitions/coursework_deal-service_internal_domain.Booking'
         "401":
           description: Unauthorized
           schema:
@@ -319,7 +989,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domain.Booking'
+            $ref: '#/definitions/coursework_deal-service_internal_domain.Booking'
         "401":
           description: Unauthorized
           schema:
@@ -360,14 +1030,14 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/httptransport.updateBookingRequest'
+          $ref: '#/definitions/internal_transport_http.updateBookingRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domain.Booking'
+            $ref: '#/definitions/coursework_deal-service_internal_domain.Booking'
         "400":
           description: Bad Request
           schema:
@@ -403,6 +1073,115 @@ paths:
       summary: Update booking
       tags:
       - bookings
+  /api/bookings/{id}/checkout:
+    post:
+      description: Calculates amount from nights × price_per_night and creates payment
+        invoice.
+      parameters:
+      - description: Booking ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/coursework_deal-service_internal_domain.Booking'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create invoice for booking (client)
+      tags:
+      - bookings
+  /api/bookings/{id}/pay:
+    post:
+      parameters:
+      - description: Booking ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Idempotency key
+        in: header
+        name: Idempotency-Key
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/coursework_deal-service_internal_service.PayBookingResult'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Pay booking invoice (client)
+      tags:
+      - bookings
+  /api/medical-profiles:
+    get:
+      description: Returns catalog profile names for filters and admin forms.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_transport_http.medicalProfilesResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List medical profile names
+      tags:
+      - sanatoriums
   /api/sanatoriums:
     get:
       description: Returns sanatorium catalog with pagination, filtering and sorting.
@@ -455,7 +1234,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.ListSanatoriumsResult'
+            $ref: '#/definitions/coursework_deal-service_internal_service.ListSanatoriumsResult'
         "400":
           description: Bad Request
           schema:
@@ -492,7 +1271,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.SanatoriumDetailsResult'
+            $ref: '#/definitions/coursework_deal-service_internal_service.SanatoriumDetailsResult'
         "400":
           description: Bad Request
           schema:
@@ -516,6 +1295,7 @@ schemes:
 - https
 securityDefinitions:
   BearerAuth:
+    description: 'JWT from POST /api/auth/login. Prefix: Bearer'
     in: header
     name: Authorization
     type: apiKey

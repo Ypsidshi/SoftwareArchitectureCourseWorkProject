@@ -51,6 +51,7 @@ type CreateContractInput struct {
 
 type PaymentCompleted struct {
 	ContractID string  `json:"contract_id"`
+	BookingID  string  `json:"booking_id"`
 	InvoiceID  string  `json:"invoice_id"`
 	PaymentID  string  `json:"payment_id"`
 	Amount     float64 `json:"amount"`
@@ -135,7 +136,7 @@ func (s *DealService) UpdateStatus(ctx context.Context, id, status string) error
 
 func (s *DealService) HandlePaymentCompleted(ctx context.Context, event PaymentCompleted) error {
 	if event.ContractID == "" {
-		return fmt.Errorf("contract_id is required")
+		return nil
 	}
 	s.logger.Info("payment.completed received",
 		slog.String("contract_id", event.ContractID),
