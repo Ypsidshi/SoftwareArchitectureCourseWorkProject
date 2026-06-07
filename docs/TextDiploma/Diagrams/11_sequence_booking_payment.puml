@@ -1,0 +1,28 @@
+@startuml
+!include _skin_bw.puml
+skinparam responseMessageBelowArrow true
+
+' Рис. 11 — типовая синхронная цепочка deal-service (клиент и администратор).
+' Один сценарий: получение сведений о бронированиях. Подпись — в тексте ПЗ.
+
+actor "Пользователь\n(клиент или администратор)" as User
+participant "Обработчик запросов\n(deal-service)" as Handler
+participant "Промежуточное ПО\nаутентификации" as AuthMW
+participant "Сервисный слой\nбронирований" as BookingSvc
+participant "Репозиторий\nбронирований" as Repo
+database "PostgreSQL" as DB
+
+autonumber
+
+User -> Handler ++ : Отправить запрос на получение\nсведений о бронированиях (JWT)
+Handler -> AuthMW ++ : Проверить токен и роль пользователя
+AuthMW --> Handler -- : Разрешить доступ, передать\nидентификатор и роль
+Handler -> BookingSvc ++ : Запросить список бронирований\n(с учётом роли и фильтров)
+BookingSvc -> Repo ++ : Выбрать записи в схеме deal
+Repo -> DB ++ : Выполнить SQL-запрос к таблице\nбронирований
+DB --> Repo -- : Вернуть строки результата
+Repo --> BookingSvc -- : Вернуть доменные объекты\nбронирований
+BookingSvc --> Handler -- : Вернуть страницу списка
+Handler --> User -- : Вернуть ответ REST API\n(JSON)
+
+@enduml

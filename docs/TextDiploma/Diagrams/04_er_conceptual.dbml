@@ -1,0 +1,55 @@
+// Концептуальная модель (рис. 4): 6 сущностей таблиц 1–2, ключевые атрибуты.
+// Импорт: https://dbdiagram.io/d  →  Import → вставить файл → Export PNG.
+// Contract и служебные таблицы (refresh_tokens) не включены.
+
+Table users as "Пользователь" {
+  id uuid [pk, note: 'Идентификатор']
+  email varchar [unique, not null, note: 'Электронная почта']
+  full_name varchar [not null, note: 'ФИО']
+  role varchar [not null, note: 'admin | client']
+}
+
+Table sanatoriums as "Санаторий" {
+  id uuid [pk]
+  name varchar [not null, note: 'Наименование']
+  city varchar [not null, note: 'Город']
+  price_per_night decimal [not null, note: 'Цена за ночь']
+  total_places int [not null, note: 'Вместимость']
+}
+
+Table medical_profiles as "Медицинский профиль" {
+  id uuid [pk]
+  name varchar [unique, not null, note: 'Наименование профиля']
+  description varchar [note: 'Описание']
+}
+
+Table sanatorium_medical_profiles as "Специализация санатория" {
+  sanatorium_id uuid [pk, ref: > sanatoriums.id]
+  profile_id uuid [pk, ref: > medical_profiles.id]
+}
+
+Table bookings as "Бронирование" {
+  id uuid [pk]
+  client_id uuid [not null, ref: > users.id]
+  sanatorium_id uuid [not null, ref: > sanatoriums.id]
+  check_in date [not null, note: 'Дата заезда']
+  check_out date [not null, note: 'Дата выезда']
+  guests int [not null, note: 'Число гостей']
+  status varchar [not null, note: 'created | confirmed | cancelled']
+}
+
+Table invoices as "Счёт на оплату" {
+  id uuid [pk]
+  booking_id uuid [unique, ref: - bookings.id, note: '1:1 с бронированием']
+  amount decimal [not null, note: 'Сумма']
+  currency char(3) [not null, note: 'Валюта']
+  status varchar [not null, note: 'issued | paid | overdue | cancelled']
+}
+
+Table payments as "Платёж" {
+  id uuid [pk]
+  invoice_id uuid [not null, ref: > invoices.id]
+  amount decimal [not null, note: 'Сумма']
+  status varchar [not null, note: 'completed | failed | refunded']
+  idempotency_key varchar [unique, not null, note: 'Ключ идемпотентности']
+}

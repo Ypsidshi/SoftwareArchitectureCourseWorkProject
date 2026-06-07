@@ -1,0 +1,23 @@
+@startuml
+!include _skin_bw.puml
+left to right direction
+
+node "Client PC" as ClientPC {
+  artifact "WEB-браузер" as Browser <<execution environment>>
+}
+
+node "Server PC" as ServerPC {
+  artifact "Frontend-приложение\n(SPA, nginx :3000)" as Frontend <<artifact>>
+  artifact "Микросервисы\n(auth, deal, payment)" as Microservices <<artifact>>
+  artifact "NATS\n(:4222)" as NatsBroker <<artifact>>
+}
+
+node "Docker DatabaseServer" as DbHost {
+  database "PostgreSQL\n(:5432)" as PG <<DBMS>>
+}
+
+ClientPC -down-> ServerPC : HTTP-запросы
+DbHost -up-> ServerPC : SQL-запросы
+Microservices ..> NatsBroker : события
+
+@enduml

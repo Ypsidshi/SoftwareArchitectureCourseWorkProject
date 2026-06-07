@@ -14,7 +14,17 @@
 - `docs/TextCw/CourseworkCurrent.md` — ПЗ курсовой (только чтение)
 - `docs/coursework-go.md` — описание под курсовую (только чтение)
 
-Для диплома: код, `docs/project-understanding-guide.md`, `docs/project-readiness-audit.md`. Новый текст ПЗ диплома — отдельный документ по явному запросу.
+Для диплома: код, `docs/project-understanding-guide.md`, `docs/project-readiness-audit.md`.
+
+**Текст и диаграммы диплома (рабочая зона):**
+
+- `docs/TextDiploma/DiplomaCurrent.md` — навигация по частям ПЗ
+- `docs/TextDiploma/Section_02_03/Section.md` — разделы 2–3
+- `docs/TextDiploma/Section_04/Testing.md` — раздел 4
+- `docs/TextDiploma/Appendices/` — приложения А–Л
+- `docs/TextDiploma/Examples/` — образцы по разделам
+- `docs/TextDiploma/Diagrams/*.puml` — диаграммы диплома; PNG рендер — в ту же папку
+- `docs/TextDiploma/fixes.md` — журнал точечных правок по диплому
 
 Справочно по стилю и архиву курсовой:
 - `docs/TextCw/ExampleOfCw.md` — образец оформления (стиль, структура, терминология)

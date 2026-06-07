@@ -1,0 +1,108 @@
+@startuml
+!include _skin_bw.puml
+top to bottom direction
+
+title Рисунок 5 – Логическая модель данных\n(схемы auth, deal, payment)
+
+package "schema: auth" {
+  entity "users" as users {
+    * id : UUID <<PK>>
+    --
+    email : TEXT <<UK>>
+    full_name : TEXT
+    role : TEXT
+    password_hash : TEXT
+    is_active : BOOLEAN
+  }
+
+  entity "refresh_tokens" as refresh {
+    * id : UUID <<PK>>
+    --
+    user_id : UUID <<FK>>
+    token_hash : TEXT <<UK>>
+    expires_at : TIMESTAMPTZ
+  }
+}
+
+package "schema: deal" {
+  entity "medical_profiles" as profiles {
+    * id : UUID <<PK>>
+    --
+    name : TEXT <<UK>>
+    description : TEXT
+  }
+
+  entity "sanatoriums" as sanatoriums {
+    * id : UUID <<PK>>
+    --
+    name : TEXT
+    city : TEXT
+    price_per_night : NUMERIC
+    total_places : INT
+    distance_to_sea_km : NUMERIC
+  }
+
+  entity "sanatorium_medical_profiles" as san_prof {
+    * sanatorium_id : UUID <<PK,FK>>
+    * profile_id : UUID <<PK,FK>>
+  }
+
+  entity "bookings" as bookings {
+    * id : UUID <<PK>>
+    --
+    client_id : UUID <<FK>>
+    sanatorium_id : UUID <<FK>>
+    check_in : DATE
+    check_out : DATE
+    guests : INT
+    status : TEXT
+    payment_status : TEXT
+    invoice_id : UUID <<FK>>
+    amount : NUMERIC
+  }
+
+  entity "contracts" as contracts {
+    * id : UUID <<PK>>
+    --
+    resident_id : UUID
+    invoice_id : UUID <<FK>>
+    payment_status : TEXT
+  }
+}
+
+package "schema: payment" {
+  entity "invoices" as invoices {
+    * id : UUID <<PK>>
+    --
+    contract_id : UUID <<FK>>
+    booking_id : UUID <<FK>>
+    amount : NUMERIC
+    currency : CHAR(3)
+    status : TEXT
+  }
+
+  entity "payments" as payments {
+    * id : UUID <<PK>>
+    --
+    invoice_id : UUID <<FK>>
+    amount : NUMERIC
+    idempotency_key : TEXT <<UK>>
+    status : TEXT
+  }
+}
+
+users ||--o{ refresh : identifying
+users ||--o{ bookings : non-identifying
+sanatoriums ||--o{ bookings : identifying
+profiles ||--o{ san_prof
+sanatoriums ||--o{ san_prof
+bookings |o--o| invoices : optional\n(booking_id)
+contracts |o--o| invoices : optional\n(contract_id)
+invoices ||--o{ payments : identifying
+
+note bottom of invoices
+  Ограничение: ровно одно из полей
+  contract_id или booking_id заполнено.
+end note
+
+@enduml

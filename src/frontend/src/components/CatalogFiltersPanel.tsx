@@ -3,8 +3,8 @@ import type { CatalogFilters } from "@/types";
 import { plusDaysIsoDate, todayIsoDate } from "@/lib/utils";
 import { useI18n } from "@/i18n";
 import { profileTokenToApi, splitProfiles } from "@/lib/catalogFilters";
-import { MEDICAL_PROFILE_SLUGS } from "@/lib/medicalProfiles";
-import MedicalProfileChip from "@/components/MedicalProfileChip";
+import { displayProfile, MEDICAL_PROFILE_SLUGS } from "@/lib/medicalProfiles";
+import { classNames } from "@/lib/utils";
 
 interface Props {
   initial: CatalogFilters;
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function CatalogFiltersPanel({ initial, onApply }: Props) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [form, setForm] = useState<CatalogFilters>(initial);
   const [dateError, setDateError] = useState<string | null>(null);
   const minCheckIn = todayIsoDate();
@@ -71,21 +71,29 @@ export default function CatalogFiltersPanel({ initial, onApply }: Props) {
 
       <div>
         <label className="label">{t("filters_profiles")}</label>
-        <div className="grid max-h-48 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2">
-          {profileOptions.map((code) => (
-            <label
-              key={code}
-              className="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-2 py-2 text-sm hover:bg-slate-50"
-            >
-              <input
-                type="checkbox"
-                className="shrink-0"
-                checked={selectedProfiles.has(code)}
-                onChange={() => toggleProfile(code)}
-              />
-              <MedicalProfileChip slug={code} variant={selectedProfiles.has(code) ? "color" : "mono"} />
-            </label>
-          ))}
+        <div className="max-h-48 space-y-1 overflow-y-auto">
+          {profileOptions.map((code) => {
+            const checked = selectedProfiles.has(code);
+            return (
+              <label
+                key={code}
+                className={classNames(
+                  "flex cursor-pointer items-start gap-2 rounded-md border px-2 py-2 text-sm hover:bg-slate-50",
+                  checked ? "border-brand-200 bg-brand-50/40" : "border-slate-200",
+                )}
+              >
+                <input
+                  type="checkbox"
+                  className="mt-0.5 shrink-0"
+                  checked={checked}
+                  onChange={() => toggleProfile(code)}
+                />
+                <span className="min-w-0 flex-1 break-words leading-snug text-slate-700">
+                  {displayProfile(code, lang)}
+                </span>
+              </label>
+            );
+          })}
         </div>
       </div>
 

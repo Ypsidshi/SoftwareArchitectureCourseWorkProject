@@ -1,0 +1,88 @@
+@startuml
+skinparam backgroundColor white
+skinparam actorStyle awesome
+skinparam usecaseBorderColor black
+skinparam usecaseBackgroundColor white
+skinparam usecaseFontColor black
+skinparam actorBorderColor black
+skinparam actorBackgroundColor white
+skinparam actorFontColor black
+skinparam rectangleBorderColor black
+skinparam rectangleFontColor black
+skinparam rectangleBackgroundColor white
+skinparam arrowColor black
+skinparam linetype ortho
+left to right direction
+
+actor "Администратор" as Admin
+actor "Клиент" as Client
+Admin -[hidden]down- Client
+
+rectangle "Информационная система\nклиентского бронирования" as System {
+
+  usecase "Войти\nв систему" as UC_LOGIN
+  usecase "Зарегистрироваться\nв системе" as UC_REG
+
+  usecase "Просмотреть каталог\nсанаториев" as UC_CAT
+  usecase "Отфильтровать\nсанатории" as UC_FILTER
+  usecase "Просмотреть детали\nсанатория" as UC_DETAIL
+
+  usecase "Создать\nбронирование" as UC_CREATE
+  usecase "Просмотреть собственные\nбронирования" as UC_LIST_OWN
+  usecase "Отменить\nбронирование" as UC_CANCEL
+  usecase "Оплатить\nбронирование" as UC_PAY
+
+  usecase "Просмотреть\nбронирования" as UC_ADMIN_BOOK
+  usecase "Отфильтровать\nбронирования" as UC_ADMIN_FILTER
+  usecase "Отменить бронирование\n(администратор)" as UC_ADMIN_CANCEL
+  usecase "Выставить счёт\nна бронирование" as UC_ADMIN_INVOICE
+  usecase "Отметить бронирование\nоплаченным" as UC_ADMIN_MARK
+
+  usecase "Просмотреть список\nсанаториев" as UC_ADMIN_SAN_LIST
+  usecase "Добавить\nсанаторий" as UC_ADMIN_SAN_ADD
+  usecase "Изменить\nсанаторий" as UC_ADMIN_SAN_EDIT
+  usecase "Удалить\nсанаторий" as UC_ADMIN_SAN_DEL
+}
+
+' --- Клиент ---
+Client --> UC_REG
+Client --> UC_LOGIN
+Client --> UC_CAT
+Client --> UC_DETAIL
+Client --> UC_CREATE
+Client --> UC_LIST_OWN
+Client --> UC_CANCEL
+Client --> UC_PAY
+
+' --- Администратор ---
+Admin --> UC_LOGIN
+Admin --> UC_ADMIN_BOOK
+Admin --> UC_ADMIN_CANCEL
+Admin --> UC_ADMIN_INVOICE
+Admin --> UC_ADMIN_MARK
+Admin --> UC_ADMIN_SAN_LIST
+Admin --> UC_ADMIN_SAN_ADD
+Admin --> UC_ADMIN_SAN_EDIT
+Admin --> UC_ADMIN_SAN_DEL
+
+' --- Расширения ---
+UC_FILTER ..> UC_CAT : <<extend>>
+UC_ADMIN_FILTER ..> UC_ADMIN_BOOK : <<extend>>
+
+' --- Включения (клиент) ---
+UC_CREATE ..> UC_LOGIN : <<include>>
+UC_LIST_OWN ..> UC_LOGIN : <<include>>
+UC_CANCEL ..> UC_LOGIN : <<include>>
+UC_PAY ..> UC_LOGIN : <<include>>
+
+' --- Включения (администратор) ---
+UC_ADMIN_BOOK ..> UC_LOGIN : <<include>>
+UC_ADMIN_CANCEL ..> UC_LOGIN : <<include>>
+UC_ADMIN_INVOICE ..> UC_LOGIN : <<include>>
+UC_ADMIN_MARK ..> UC_LOGIN : <<include>>
+UC_ADMIN_SAN_LIST ..> UC_LOGIN : <<include>>
+UC_ADMIN_SAN_ADD ..> UC_LOGIN : <<include>>
+UC_ADMIN_SAN_EDIT ..> UC_LOGIN : <<include>>
+UC_ADMIN_SAN_DEL ..> UC_LOGIN : <<include>>
+
+@enduml

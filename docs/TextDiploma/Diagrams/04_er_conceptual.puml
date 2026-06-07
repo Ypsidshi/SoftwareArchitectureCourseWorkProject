@@ -1,0 +1,29 @@
+@startuml
+!include _skin_bw.puml
+skinparam linetype ortho
+top to bottom direction
+
+' Концептуальная модель (ER): сущности и связи без атрибутов — таблицы 1–2.
+' Contract не показан (служебный контур, вне таблицы 2).
+
+rectangle "Пользователь" as User
+rectangle "Санаторий" as Sanatorium
+rectangle "Медицинский\nпрофиль" as MedProfile
+rectangle "Бронирование" as Booking
+rectangle "Счёт на оплату" as Invoice
+rectangle "Платёж" as Payment
+
+User -[hidden]right- Sanatorium
+MedProfile -[hidden]right- Booking
+User -[hidden]down- Booking
+Sanatorium -[hidden]down- MedProfile
+Booking -[hidden]down- Invoice
+Invoice -[hidden]down- Payment
+
+User -- Booking : оформляет\n1 : N
+Sanatorium -- Booking : принимает\n1 : N
+Sanatorium -- MedProfile : специализируется\nM : N
+Booking -- Invoice : имеет\n1 : 1
+Invoice -- Payment : оплачивается\n1 : N
+
+@enduml

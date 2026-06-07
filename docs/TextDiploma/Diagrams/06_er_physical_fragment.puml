@@ -1,0 +1,58 @@
+@startuml
+!include _skin_bw.puml
+left to right direction
+
+title Рисунок 6 – Физическая модель данных (фрагмент)\nотношения deal.bookings, payment.invoices, payment.payments
+
+entity "deal.bookings" as bookings {
+  * **id** : UUID <<PK>>
+  --
+  * **client_id** : UUID NOT NULL
+  * **sanatorium_id** : UUID NOT NULL <<FK>>
+  * **check_in** : DATE NOT NULL
+  * **check_out** : DATE NOT NULL
+  * **guests** : INT NOT NULL
+  * **status** : TEXT NOT NULL
+  * **payment_status** : TEXT NOT NULL
+  payment_error : TEXT
+  amount : NUMERIC(12,2)
+  currency : CHAR(3) NOT NULL
+  invoice_id : UUID <<FK>>
+  created_at : TIMESTAMPTZ NOT NULL
+  updated_at : TIMESTAMPTZ NOT NULL
+  cancelled_at : TIMESTAMPTZ
+  ..
+  CK: check_in < check_out
+  CK: payment_status IN (...)
+}
+
+entity "payment.invoices" as invoices {
+  * **id** : UUID <<PK>>
+  --
+  contract_id : UUID <<FK>>
+  booking_id : UUID <<FK>>
+  * **amount** : NUMERIC(12,2) NOT NULL
+  * **currency** : CHAR(3) NOT NULL
+  * **status** : TEXT NOT NULL
+  issued_at : TIMESTAMPTZ NOT NULL
+  updated_at : TIMESTAMPTZ NOT NULL
+  ..
+  CK: XOR(contract_id, booking_id)
+}
+
+entity "payment.payments" as payments {
+  * **id** : UUID <<PK>>
+  --
+  * **invoice_id** : UUID NOT NULL <<FK>>
+  * **amount** : NUMERIC(12,2) NOT NULL
+  * **status** : TEXT NOT NULL
+  * **idempotency_key** : TEXT NOT NULL <<UK>>
+  external_ref : TEXT
+  paid_at : TIMESTAMPTZ NOT NULL
+  created_at : TIMESTAMPTZ NOT NULL
+}
+
+bookings ||--o| invoices : invoice_id
+invoices ||--o{ payments : invoice_id
+
+@enduml

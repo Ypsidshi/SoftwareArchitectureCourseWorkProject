@@ -1,0 +1,76 @@
+@startuml
+!include _skin_bw.puml
+
+title Рисунок 3 – Диаграмма компонентов информационной системы
+
+node "Клиентская часть" {
+  [Web-приложение\n(SPA в браузере)] as WebApp
+}
+
+node "Серверная часть" {
+  package "auth-service :8081" {
+    [AuthHandler] as AH
+    [AuthService] as AS
+    [UserRepository] as AR
+  }
+
+  package "deal-service :8082" {
+    [HTTP Handlers] as DH
+    [BookingService] as BS
+    [SanatoriumAdminService] as SAS
+    [AuthClient] as AC
+    [PaymentClient] as PC
+    [CatalogRepository] as CR
+    [PaymentEventsRouter] as PER
+  }
+
+  package "payment-service :8083" {
+    [PaymentHandler] as PH
+    [PaymentService] as PS
+    [PaymentRepository] as PR
+  }
+
+  package "platform-common" {
+    [Middleware\nJWT, metrics, trace] as MW
+    [NATS client] as NC
+    [Logger slog] as LOG
+  }
+}
+
+database "PostgreSQL :5432" {
+  [schema: auth] as DBAuth
+  [schema: deal] as DBDeal
+  [schema: payment] as DBPayment
+}
+
+queue "NATS :4222" as NATS
+
+WebApp --> DH : REST /api\n(единая точка входа)
+
+DH --> AC : register / login
+AC --> AH : REST
+
+DH --> BS
+DH --> SAS
+BS --> CR
+SAS --> CR
+BS --> PC : checkout / pay
+PC --> PH : POST /internal/invoices
+
+PH --> PS
+PS --> PR
+PS --> NATS : payment.completed
+
+PER --> NATS : subscribe
+PER --> BS
+
+BS --> NATS : booking.confirmed\nbooking.cancelled
+
+AR --> DBAuth
+CR --> DBDeal
+PR --> DBPayment
+
+AH --> AS
+AS --> AR
+
+@enduml

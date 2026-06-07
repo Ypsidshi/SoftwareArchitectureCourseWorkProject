@@ -1,56 +1,113 @@
 @startuml
-skinparam actorStyle awesome
 skinparam backgroundColor white
+skinparam actorStyle awesome
 skinparam usecaseBorderColor black
 skinparam usecaseBackgroundColor white
 skinparam usecaseFontColor black
 skinparam actorBorderColor black
 skinparam actorBackgroundColor white
 skinparam actorFontColor black
+skinparam packageBorderColor black
+skinparam packageFontColor black
+skinparam packageBackgroundColor white
 skinparam arrowColor black
 skinparam linetype ortho
 left to right direction
 
 actor "Клиент" as Client
+actor "Администратор" as Admin
 
-rectangle "Информационная система бронирования" {
-    usecase "Регистрация" as UC1
-    usecase "Вход в систему" as UC2
-    usecase "Восстановление\nпароля" as UC3
-    usecase "Просмотр каталога\nсанаториев" as UC4
-    usecase "Поиск и фильтрация\nсанаториев" as UC5
-    usecase "Просмотр деталей\nсанатория" as UC6
-    usecase "Создание\nбронирования" as UC7
-    usecase "Проверка доступности\nмест" as UC8
-    usecase "Расчёт стоимости\nбронирования" as UC9
-    usecase "Оплата\nбронирования" as UC10
-    usecase "Просмотр списка\nбронирований" as UC11
-    usecase "Изменение\nбронирования" as UC12
-    usecase "Отмена\nбронирования" as UC13
+rectangle "Информационная система\nклиентского бронирования" as System {
+
+  package "Клиентский контур" as ClientPkg {
+    usecase "Регистрироваться\nв системе" as UC_REG
+    usecase "Входить\nв систему" as UC_LOGIN
+    usecase "Восстанавливать\nпароль" as UC_PWD
+
+    usecase "Просматривать каталог\nсанаториев" as UC_CAT
+    usecase "Искать и фильтровать\nсанатории" as UC_FILTER
+    usecase "Просматривать детали\nсанатория" as UC_DETAIL
+
+    usecase "Создавать\nбронирование" as UC_CREATE
+    usecase "Просматривать собственные\nбронирования" as UC_LIST_OWN
+    usecase "Изменять\nбронирование" as UC_UPDATE
+    usecase "Отменять\nбронирование" as UC_CANCEL
+    usecase "Выставлять счёт\nна бронирование" as UC_INVOICE
+    usecase "Оплачивать\nбронирование" as UC_PAY
+
+    usecase "Проверять доступность\nмест" as UC_AVAIL
+    usecase "Рассчитывать стоимость\nбронирования" as UC_CALC
+  }
+
+  package "Служебный контур\n(администратор)" as AdminPkg {
+    usecase "Просматривать все\nбронирования" as UC_ADMIN_BOOK
+    usecase "Фильтровать\nбронирования" as UC_ADMIN_FILTER
+    usecase "Отменять бронирование\n(служебно)" as UC_ADMIN_CANCEL
+    usecase "Выставлять счёт\n(служебно)" as UC_ADMIN_INVOICE
+    usecase "Оплачивать бронирование\n(служебно)" as UC_ADMIN_PAY
+
+    usecase "Просматривать каталог\nсанаториев (админ)" as UC_ADMIN_SAN_LIST
+    usecase "Добавлять\nсанаторий" as UC_ADMIN_SAN_ADD
+    usecase "Изменять данные\nсанатория" as UC_ADMIN_SAN_EDIT
+    usecase "Удалять\nсанаторий" as UC_ADMIN_SAN_DEL
+  }
 }
 
-Client --> UC1
-Client --> UC2
-Client --> UC3
-Client --> UC4
-Client --> UC5
-Client --> UC6
-Client --> UC7
-Client --> UC10
-Client --> UC11
-Client --> UC12
-Client --> UC13
+' --- Клиент ---
+Client --> UC_REG
+Client --> UC_LOGIN
+Client --> UC_CAT
+Client --> UC_DETAIL
+Client --> UC_CREATE
+Client --> UC_LIST_OWN
+Client --> UC_UPDATE
+Client --> UC_CANCEL
+Client --> UC_INVOICE
+Client --> UC_PAY
 
-UC3 ..> UC2 : <<extend>>
-UC5 ..> UC4 : <<extend>>
+' --- Администратор ---
+Admin --> UC_LOGIN
+Admin --> UC_ADMIN_BOOK
+Admin --> UC_ADMIN_CANCEL
+Admin --> UC_ADMIN_INVOICE
+Admin --> UC_ADMIN_PAY
+Admin --> UC_ADMIN_SAN_LIST
+Admin --> UC_ADMIN_SAN_ADD
+Admin --> UC_ADMIN_SAN_EDIT
+Admin --> UC_ADMIN_SAN_DEL
 
-UC7 ..> UC2 : <<include>>
-UC7 ..> UC8 : <<include>>
-UC7 ..> UC9 : <<include>>
-UC7 ..> UC10 : <<include>>
+' --- Расширения ---
+UC_PWD ..> UC_LOGIN : <<extend>>
+UC_FILTER ..> UC_CAT : <<extend>>
+UC_ADMIN_FILTER ..> UC_ADMIN_BOOK : <<extend>>
 
-UC11 ..> UC2 : <<include>>
-UC12 ..> UC2 : <<include>>
-UC13 ..> UC2 : <<include>>
+' --- Включения (клиент) ---
+UC_CREATE ..> UC_LOGIN : <<include>>
+UC_CREATE ..> UC_AVAIL : <<include>>
+UC_CREATE ..> UC_CALC : <<include>>
+
+UC_LIST_OWN ..> UC_LOGIN : <<include>>
+UC_UPDATE ..> UC_LOGIN : <<include>>
+UC_UPDATE ..> UC_AVAIL : <<include>>
+UC_UPDATE ..> UC_CALC : <<include>>
+UC_CANCEL ..> UC_LOGIN : <<include>>
+
+UC_INVOICE ..> UC_LOGIN : <<include>>
+UC_INVOICE ..> UC_CALC : <<include>>
+UC_PAY ..> UC_LOGIN : <<include>>
+UC_PAY ..> UC_INVOICE : <<include>>
+
+' --- Включения (администратор) ---
+UC_ADMIN_BOOK ..> UC_LOGIN : <<include>>
+UC_ADMIN_CANCEL ..> UC_LOGIN : <<include>>
+UC_ADMIN_INVOICE ..> UC_LOGIN : <<include>>
+UC_ADMIN_INVOICE ..> UC_CALC : <<include>>
+UC_ADMIN_PAY ..> UC_LOGIN : <<include>>
+UC_ADMIN_PAY ..> UC_ADMIN_INVOICE : <<include>>
+
+UC_ADMIN_SAN_ADD ..> UC_LOGIN : <<include>>
+UC_ADMIN_SAN_EDIT ..> UC_LOGIN : <<include>>
+UC_ADMIN_SAN_DEL ..> UC_LOGIN : <<include>>
+UC_ADMIN_SAN_LIST ..> UC_LOGIN : <<include>>
 
 @enduml

@@ -1,0 +1,84 @@
+@startuml
+!include _skin_bw.puml
+skinparam linetype ortho
+top to bottom direction
+
+' Подпись «Рисунок N – …» только в тексте ПЗ (Word), не на холсте.
+
+package "Клиентская часть\n(React SPA, TypeScript)" as FE {
+
+  component "main.tsx\nBrowserRouter,\nQueryClientProvider,\nI18nProvider" as Main
+
+  component "App.tsx\nмаршрутизация" as App
+  component "ProtectedRoute\nконтроль JWT и роли" as PR
+  component "Layout + Navbar\nобщая оболочка" as Shell
+
+  package "Страницы (pages)" as Pages {
+    component "CatalogPage\nкаталог и фильтры" as PCat
+    component "SanatoriumDetailPage\nкарточка, бронирование" as PDet
+    component "LoginPage /\nRegisterPage" as PAuth
+    component "MyBookingsPage\nбронирования клиента" as PBook
+    component "AdminLayout" as PAdmLay
+    component "AdminBookingsTab" as PAdmB
+    component "AdminSanatoriumsTab" as PAdmS
+  }
+
+  package "UI-компоненты (components)" as UI {
+    component "CatalogFiltersPanel" as Filters
+    component "SanatoriumCard" as SCard
+    component "BookingCard" as BCard
+    component "Modal" as Modal
+    component "MedicalProfileChip" as Chip
+  }
+
+  package "Состояние и хуки" as State {
+    component "authStore\n(zustand)" as Store
+    component "react-query\nкэш запросов" as RQ
+    component "i18n\nru / en" as I18n
+    component "useBookingPayment\ncheckout / pay" as PayHook
+  }
+
+  package "API-слой (api)" as API {
+    component "dealApi (axios)\nJWT interceptor" as Client
+    component "auth.ts" as ApiAuth
+    component "sanatoriums.ts" as ApiSan
+    component "bookings.ts" as ApiBook
+    component "admin.ts" as ApiAdm
+  }
+}
+
+Main --> App
+App --> Shell
+App --> PR
+Shell --> Pages
+PR --> PBook
+PR --> PAdmLay
+
+PAdmLay --> PAdmB
+PAdmLay --> PAdmS
+
+PCat --> Filters
+PCat --> SCard
+PCat --> RQ
+PDet --> ApiSan
+PDet --> ApiBook
+PDet --> Chip
+PBook --> PayHook
+PBook --> BCard
+PAuth --> ApiAuth
+PAdmB --> ApiAdm
+PAdmS --> Modal
+
+Store --> App
+Store --> Client
+I18n --> Shell
+I18n --> Filters
+RQ --> ApiSan
+RQ --> ApiBook
+
+Client --> ApiAuth
+Client --> ApiSan
+Client --> ApiBook
+Client --> ApiAdm
+
+@enduml

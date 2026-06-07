@@ -1,0 +1,1213 @@
+Антонов
+Приложение А
+(справочное)
+Глоссарий 
+Серверное приложение – это программное обеспечение, которое работает на сервере и предоставляет различные сервисы или функциональность для клиентских приложений. Серверные приложения обычно используются в клиент-серверной архитектуре. 
+API (Application Programming Interface) – это набор правил и протоколов, которые позволяют различным программным приложениям взаимодействовать друг с другом. 
+REST (Representational State Transfer) – это стиль архитектуры программного обеспечения для распределенных систем, который, как правило, используется для построения веб-служб. 
+Слой представления данных – это первый и самый верхний уровень, который присутствует в приложении. Этот уровень представляет собой UI, то есть представление контента конечному пользователю, через интерфейс. 
+HTTP-запрос – это запрос, который отправляется от клиента к веб-серверу для получения или отправки данных. 
+Контроллер – это компонент приложения, который обрабатывает входящие запросы от пользователей или других систем. 
+Сервис – это слой бизнес-логики приложения. 
+Бизнес-логика – это набор правил, необходимых для запуска приложения в соответствии с руководящими принципами, установленными организацией. 
+Репозиторий – это компонент, отвечающий за взаимодействие с хранилищем данных.  
+Приложение Б
+(рекомендуемое)
+Спецификация атрибутов таблиц 
+Таблица Б.1 – Спецификация атрибутов таблицы users
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор пользователя	integer	15	PK	Да		
+2	username	Имя пользователя	text	255		Да		пустая строка
+3	password	Пароль	text	255		Да		пустая строка
+4	status	Статус пользователя	integer	1				
+5	role_id	Идентификатор роли	integer	15	FK			
+6	client_id	Идентификатор клиента	integer	15	FK			
+Таблица Б.2 – Спецификация атрибутов таблицы user_role
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор роли	integer	15	PK	Да		
+2	name	Наименование роли	text	20		Да		shop
+Таблица Б.3 – Спецификация атрибутов таблицы client
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор клиента	integer	15	PK	Да		
+2	name	Наименование клиента	text	255		Да		пустая строка
+3	inn	Инн клиента	text	12		Да		пустая строка
+4	address	Адрес клиента	text	255		Да		пустая строка
+Таблица Б.4 – Спецификация атрибутов таблицы product
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор продукта	integer	15	PK	Да		
+2	name	Название продукта	text	255		Да		пустая строка
+3	brand	Бренд производитель	text	30		Да		пустая строка
+4	price	Стоимость продукта	decimal	1		Да		пустая строка
+5	material	Краткое описание материала	text	100	FK			
+6	status	Статус продукта	text	10	FK	Да		
+7	factory_id	Идентификатор производителя	integer	15	FK			
+
+Таблица Б.5 – Спецификация атрибутов таблицы product_item
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор варианта продукта	integer	15	PK	Да		
+2	color	Цвет	text	30				
+3	size	Размер	decimal	6				
+4	weight	Вес	decimal	6				
+5	quantity	Количество на складе	integer	3				
+6	product_id	Идентификатор продукта	integer	15	FK			
+Таблица Б.6 – Спецификация атрибутов таблицы material
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор материала	integer	15	PK	Да		
+2	name	Наименование материла	text	20		Да		
+Таблица Б.7 – Спецификация атрибутов таблицы product_material
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор записи	integer	15	PK	Да		
+2	product_id	Идентификатор продукта	integer	15	FK	Да		
+3	material_id	Идентификатор материала	integer	15	FK	Да		
+Таблица Б.8 – Спецификация атрибутов таблицы image
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор картинки	integer	15	PK	Да		
+2	product_id	Идентификатор продукта	integer	15	FK	Да		
+3	url	Ссылка на картинку	text	255		Да		
+Таблица Б.9 – Спецификация атрибутов таблицы cart
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор корзины	integer	15	PK	Да		
+Продолжение таблицы Б.9
+2	user_id	Идентификатор пользователя	integer	15	FK	Да		
+3	create_date	Дата создания	timestamp	20		Да		0001-01-01
+Таблица Б.10 – Спецификация атрибутов таблицы cart_item
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор содержимого корзины	integer	15	PK	Да		
+2	cart_id	Идентификатор корзины	integer	15	FK	Да		
+3	product_item_id	Идентификатор варианта продукта	integer	15	FK	Да		
+4	quantity	Количество	integer	15				
+5	is_selected	Выбран	boolean	1				
+Таблица Б.11 – Спецификация атрибутов таблицы orders
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор заказа	uuid	20	PK	Да		
+2	status	Статус заказа	text	20		Да		created
+3	create_date	Дата создания	timestamp	20		Да		0001-01-01
+4	delivery_date	Дата доставки	timestamp	20				0001-01-01
+5	user_id	Идентификатор пользователя	integer	15	FK	Да		
+Таблица Б.12 – Спецификация атрибутов таблицы orders_item
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор содержимого заказа	uuid	20	PK	Да		
+2	orders_id	Идентификатор заказа	uuid	20	FK	Да		
+3	product_item_id	Идентификатор варианта продукта	integer	15	FK	Да		
+Продолжение таблицы Б.12
+4	quantity	Количество	integer	3				
+Таблица Б.13 – Спецификация атрибутов таблицы operation
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор операции	uuid	20	PK	Да		
+2	orders_id	Идентификатор заказа	uuid	20	FK	Да		
+3	date	Дата операции	timestamp	20		Да		0001-01-01
+4	description	Описание операции	text	255				
+Таблица Б.14 – Спецификация атрибутов таблицы operation_detail
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор детали операции	uuid	20	PK	Да		
+2	operation_id	Идентификатор операции	uuid	20	FK	Да		
+3	type	Тип операции	integer	2		Да		0
+4	price	Сумма операции	decimal	20				
+Таблица Б.15 – Спецификация атрибутов таблицы request
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор заявки	integer	15	PK	Да		
+2	status	Статус заявки	text	20		Да		undefined
+3	type	Тип заявки	text	20		Да		undefined
+4	update_date	Дата последнего изменения	timestamp	20				0001-01-01
+5	summary	Описание	text	255				
+Таблица Б.16 – Спецификация атрибутов таблицы request_item
+№ п/п	Наименование	Описание	Тип данных	Размер	Роль	Обязательный	Ограничения	Значение по умолчанию
+1	id	Идентификатор содержимого заявки	integer	15	PK	Да		
+2	request_id	Идентификатор заявки	integer	15	FK	Да		
+3	product _id	Идентификатор продукта	integer	15	FK	Да		
+4	product_item_id	Идентификатор варианта продукта	integer	15	FK	ДА		
+5	product_item_count	Количество варианта продукта	integer	3				0
+ 
+Приложение В
+(обязательное)
+Объекты обращения к базам данных 
+Листинг В.1 – Объекты корзины
+type Cart struct {
+	Id         int       `db:"id"`
+	CreateDate time.Time `db:"create_date"`
+	UserId     int       `db:"user_id"`
+	Items      []CartItem
+}
+type CartItem struct {
+	Id            int  `db:"id"`
+	ProductItemId int  `db:"product_item_id"`
+	Quantity      int  `db:"quantity"`
+	CartId        int  `db:"cart_id"`
+	IsSelected    bool `db:"is_selected"`
+}
+Листинг В.2 – Объекты клиентов
+type Client struct {
+	Id      int    `db:"id"`
+	Name    string `db:"name"`
+	INN     string `db:"inn"`
+	Address string `db:"address"`
+}
+Листинг В.3 – Объекты заказов
+type Order struct {
+	Id           uuid.UUID `db:"id"`
+	Status       string    `db:"status"`
+	CreateDate   time.Time `db:"create_date"`
+	DeliveryDate time.Time `db:"delivery_date"`
+	UserId       int       `db:"user_id"`
+}
+type OrderItem struct {
+	Id            uuid.UUID `db:"id"`
+	OrderId       uuid.UUID `db:"orders_id"`
+	ProductItemId int       `db:"product_item_id"`
+	Quantity      int       `db:"quantity"`
+}
+Листинг В.4 – Объекты операций
+type Operation struct {
+	Id          uuid.UUID `db:"id"`
+	Date        time.Time `db:"date"`
+	Description string    `db:"description"`
+	OrderId     uuid.UUID `db:"orders_id"`
+}
+type OperationDetail struct {
+	Id          uuid.UUID           `db:"id"`
+	OperationId uuid.UUID           `db:"operation_id"`
+	Type        OperationDetailType `db:"type"`
+	Price       decimal.Decimal     `db:"price"`
+}
+Листинг В.5 – Объекты запросов
+type Request struct {
+	Id         int           `db:"id" json:"id"`
+	Status     string        `db:"status" json:"status"`
+	Type       string        `db:"type" json:"type"`
+	UpdateDate time.Time     `db:"update_date" json:"update_date"`
+	Summary    string        `db:"summary" json:"summary"`
+	Items      []RequestItem `db:"-" json:"items"`
+}
+type RequestItem struct {
+	Id               int `db:"id" json:"id"`
+	RequestId        int `db:"request_id" json:"request_id"`
+	ProductId        int `db:"product_id" json:"product_id"`
+	ProductItemId    int `db:"product_item_id" json:"product_item_id"`
+	ProductItemCount int `db:"product_item_count" json:"product_item_count"`
+}
+Листинг В.6 – Объекты пользователей
+type User struct {
+	Id       int    `db:"id"`
+	Username string `db:"username"`
+	Password string `db:"password"`
+	Status   int    `db:"status"`
+	RoleId   int    `db:"role_id"`
+	ClientId int    `db:"client_id"`
+}
+type Role struct {
+	Id   int    `db:"id"`
+	Name string `db:"name"`
+}
+Листинг В.7 – Объекты склада
+type Product struct {
+	Id        int             `db:"id" json:"id"`
+	BrandName string          `db:"brand" json:"brand"`
+	Name      string          `db:"name" json:"name"`
+	Price     decimal.Decimal `db:"price" json:"price"`
+	Status    string          `db:"status" json:"status"`
+	FactoryId int             `db:"factory_id" json:"factory_id"`
+
+	Items     []ProductItem
+	Materials []ProductMaterial
+	Images    []ProductImages
+}
+type ProductMaterial struct {
+	Id         int    `db:"id" json:"id"`
+	MaterialId int    `db:"material_id" json:"material_id"`
+	ProductId  int    `db:"product_id" json:"product_id"`
+	Material   string `db:"name" json:"material"`
+}
+type ProductImages struct {
+	Id        int    `db:"id" json:"id"`
+	ProductId int    `db:"product_id" json:"product_id"`
+	ImageUrl  string `db:"url" json:"image_url"`
+}
+type ProductItem struct {
+	Id         int             `db:"id" json:"id"`
+	ProductId  int             `db:"product_id" json:"productId"`
+	StockCount int             `db:"stock_count" json:"stockCount"`
+	Size       int             `db:"size" json:"size"`
+	Weight     decimal.Decimal `db:"weight" json:"weight"`
+	Color      string          `db:"color" json:"color"`
+} 
+Приложение Г
+(обязательное)
+SQL-скрипты 
+Листинг Г.1 – Скрипты создания таблиц
+create table if not exists cart
+(
+    id          serial primary key,
+    create_date timestamp,
+    user_id     int
+    );
+
+create table if not exists cart_item
+(
+    id              serial primary key,
+    cart_id         int references cart (id),
+    product_item_id int,
+    quantity        int,
+    is_selected     bool not null default false
+);
+
+create table if not exists client
+(
+    id      serial primary key,
+    name    text not null default '',
+    inn     text,
+    address text
+);
+
+create table if not exists orders
+(
+    id            uuid primary key,
+    status        text      not null,
+    create_date   timestamp not null,
+    delivery_date timestamp,
+    user_id       int
+    );
+
+create table if not exists orders_item
+(
+    id              uuid primary key,
+    orders_id       uuid references orders (id),
+    product_item_id int,
+    quantity        int
+    );
+
+create table if not exists operation
+(
+    id          uuid primary key,
+    date        timestamp not null,
+    description text,
+    orders_id   uuid references orders (id)
+    );
+
+create table if not exists operation_detail
+(
+    id           uuid primary key,
+    operation_id uuid references operation (id),
+    type         int     not null,
+    price        decimal not null
+);
+
+create table if not exists request
+(
+    id          serial primary key,
+    status      text not null default 0,
+    type        text not null default 0,
+    update_date date,
+    summary     text
+);
+
+create table if not exists request_item
+(
+    id              serial primary key,
+    request_id      int,
+    product_id      int,
+    product_item_id int,
+    product_item_count int
+);
+create table if not exists user_role
+(
+    id   serial primary key,
+    name text not null default ''
+);
+
+create table if not exists users
+(
+    id        serial primary key,
+    username  text not null default '',
+    password  text not null default '',
+    status    int,
+    role_id   int references user_role (id),
+    client_id int
+);
+
+create table if not exists product
+(
+    id          serial primary key,
+    name        text    default ''::text not null,
+    brand       text    default ''::text not null,
+    price       numeric default 0.0      not null,
+    material    text    default ''::text not null,
+    status      text    default ''::text not null,
+    factory_id  integer
+);
+
+create table if not exists product_item
+(
+    id         serial primary key,
+    product_id integer references product(id),
+    color      text    default ''::text not null,
+    size       numeric default 0.0      not null,
+    weight     numeric default 0.0      not null,
+    quantity   integer default 0        not null
+);
+
+create table if not exists material
+(
+    id   serial primary key,
+    name text not null
+);
+
+create table if not exists product_material
+(
+    id          serial  primary key,
+    product_id  integer references product(id),
+    material_id integer references material(id)
+);
+
+create table if not exists image
+(
+    id         serial primary key,
+    product_id integer references product(id),
+    url        text default ''::text not null
+);
+Листинг Г.2 – Скрипты вставки данных
+INSERT INTO product (name, brand, price, status, factory_id)
+VALUES (:name, :brand, :price, :status, :factory_id)
+RETURNING id;
+
+INSERT INTO product_item (product_id, color, size, weight, quantity)
+VALUES (:product_id, :color, :size, :weight, :stock_count)
+RETURNING id;
+
+INSERT INTO image (product_id, url)
+VALUES (:product_id, :url)
+RETURNING id;
+
+INSERT INTO product_material (product_id, material_id)
+VALUES (:product_id, :material_id)
+RETURNING id;
+
+insert into users (username, password, status, role_id, client_id)
+values ($1, $2, $3, $4, $5)
+returning id
+
+insert into request (status, type, update_date, summary)
+values (:status, :type, :update_date, :summary)
+returning id
+
+insert into request_item (request_id, product_id, product_item_id, product_item_count)
+values (:request_id, :product_id, :product_item_id, :product_item_count)
+
+insert into orders (id, status, create_date, delivery_date, user_id)
+values (:id, :status, :create_date, :delivery_date, :user_id)
+
+insert into orders_item (id, orders_id, product_item_id, quantity)
+values (:id, :orders_id, :product_item_id, :quantity)
+
+insert into operation (id, date, description, orders_id)
+values (:id, :date, :description, :orders_id)
+
+insert into operation_detail (id, operation_id, type, price)
+values (:id, :operation_id, :type, :price)
+
+insert into client (name, inn, address)
+VALUES ($1, $2, $3)
+returning id
+
+insert into cart (create_date, user_id)
+values (:create_date, :user_id)
+
+insert into cart_item (cart_id, product_item_id, quantity, is_selected)
+values (:cart_id, :product_item_id, :quantity, :is_selected)
+returning id
+
+Листинг Г.3 – Скрипты получения данных
+select id,
+       create_date,
+       user_id
+from cart
+where user_id = $1
+
+select id,
+       name,
+       inn,
+       address
+from client
+where id = any($1)
+
+select id,
+    date,
+    description,
+    orders_id
+from operation
+where orders_id = $1
+
+select id,
+       status,
+       create_date,
+       delivery_date,
+       user_id
+from orders
+where user_id = $1
+
+select id,
+       status,
+       type,
+       update_date,
+       summary
+from request
+where status = 'pending'
+
+select id,
+       username,
+       password,
+       status,
+       role_id,
+       client_id
+from users
+where username = $1
+
+select pit.id       as id,
+       p.id         as product_id,
+       p.factory_id as factory_id,
+       p.name       as name,
+       p.price      as price,
+       pit.color    as color,
+       pit.size     as size,
+       pit.weight   as weight,
+       pit.quantity as count
+from product_item pit
+    join product p on p.id = pit.product_id
+where pit.id = any ($1) 
+Приложение Д
+(обязательное)
+Структуры слоя представления данных 
+Листинг Д.1 – Слой представления auth-service
+func (s *Server) Setup(authService service.AuthService, registrationService service.Registration) {
+	s.server.Post("/sign-up", handlers.SignupHandler(registrationService))
+	s.server.Post("/login", handlers.LoginHandler(authService))
+	s.server.Post("/logout", handlers.LogoutHandler(authService))
+	s.server.Post("/refresh-token", handlers.RefreshHandler(authService))
+	s.server.Post("/password/new", handlers.UpdatePasswordHandler(authService))
+}
+Листинг Д.2 – Слой представления cart-service
+func (r *Router) SetupRoutes(logger goatlogger.Logger, cartService service.Cart) {
+	r.router.HandleFunc("/cart", handlers.GetCartHandler(logger, cartService)).Methods(http.MethodGet)
+	r.router.HandleFunc("/cart/item", handlers.AddCartItemHandler(logger, cartService)).Methods(http.MethodPost)
+	r.router.HandleFunc("/cart/item", handlers.UpdateCartItemHandler(logger, cartService)).Methods(http.MethodPut)
+	r.router.HandleFunc("/cart/item/{id}", handlers.DeleteItemHandler(logger, cartService)).Methods(http.MethodDelete)
+	r.router.HandleFunc("/cart/clear", handlers.ClearCartHandler(logger, cartService)).Methods(http.MethodDelete)
+	r.router.HandleFunc("/cart/items", handlers.GetCartItemsHandler(logger, cartService)).Methods(http.MethodPost)
+}
+Листинг Д.3 – Слой представления client-service
+func (r *Router) SetupRoutes(logger goatlogger.Logger, clientService service.Client) {
+	r.router.HandleFunc("/clients", handlers.GetClientsHandler(logger, clientService)).Methods(http.MethodGet)
+	r.router.HandleFunc("/client/{id}", handlers.GetClientHandler(logger, clientService)).Methods(http.MethodGet)
+	r.router.HandleFunc("/client", handlers.AddClientHandler(logger, clientService)).Methods(http.MethodPost)
+	r.router.HandleFunc("/client", handlers.UpdateClientHandler(logger, clientService)).Methods(http.MethodPut)
+	r.router.HandleFunc("/client/{id}", handlers.DeleteClientHandler(logger, clientService)).Methods(http.MethodDelete)
+	r.router.HandleFunc("/info/short", handlers.GetInfoShort(logger, clientService)).Methods(http.MethodPost)
+}
+Листинг Д.4 – Слой представления notifier-service
+func (r *Router) SetupRoutes(logger goatlogger.Logger, sender service.Sender) {
+	r.router.HandleFunc("/mail", handlers.MainSendHandler(logger, sender)).Methods(http.MethodPost)
+}
+Листинг Д.5 – Слой представления order-service
+func (r *Router) SetupRoutes(logger goatlogger.Logger, orderService service.Order) {
+	r.router.HandleFunc("/order", handlers.CreateOrderHandler(logger, orderService)).Methods(http.MethodPost)
+	r.router.HandleFunc("/orders", handlers.GetUserOrders(logger, orderService)).Methods(http.MethodGet)
+	r.router.HandleFunc("/orders/latest", handlers.GetLatestOrdersHandler(logger, orderService)).Methods(http.MethodGet)
+}
+Листинг Д.6 – Слой представления report-service
+func (r *Router) SetupRoutes(logger goatlogger.Logger, reportService service.Report) {
+	r.router.HandleFunc("/report/user/{id}/{date}", handlers.GetUserReportHandler(logger, reportService)).Methods(http.MethodGet)
+	r.router.HandleFunc("/report/factory/{id}/{date}", handlers.GetFactoryReportHandler(logger, reportService)).Methods(http.MethodGet)
+}
+Листинг Д.7 – Слой представления request-service
+func (r *Router) SetupRoutes(logger goatlogger.Logger, requestService service.Request) {
+	r.router.HandleFunc("/requests", handlers.GetAllRequestsHandler(logger, requestService)).Methods(http.MethodGet)
+	r.router.HandleFunc("/request/{id}/{status}", handlers.UpdateRequestStatusHandler(logger, requestService)).Methods(http.MethodPut)
+}
+
+Листинг Д.8 – Слой представления search-service
+func (r *Router) SetupRoutes(logger goatlogger.Logger, searchService service.Search) {
+	r.router.HandleFunc("/filters/active", handlers.GetFiltersHandlers(logger, searchService)).Methods(http.MethodGet)
+	r.router.HandleFunc("/catalog", handlers.GetCatalogHandler(logger, searchService)).Methods(http.MethodGet)
+	r.router.HandleFunc("/catalog/{productId}", handlers.GetProductCatalog(logger, searchService)).Methods(http.MethodGet)
+}
+Листинг Д.9 – Слой представления user-service
+func (r *Router) SetupRoutes(logger goatlogger.Logger, userService service.User) {
+	r.router.HandleFunc("/users", handlers.GetUsersHandler(logger, userService)).Methods(http.MethodGet)
+	r.router.HandleFunc("/user", handlers.GetUserByUserName(logger, userService)).Methods(http.MethodGet)
+	r.router.HandleFunc("/user/{id}", handlers.GetUserHandler(logger, userService)).Methods(http.MethodGet)
+	r.router.HandleFunc("/user", handlers.AddUserHandler(logger, userService)).Methods(http.MethodPost)
+	r.router.HandleFunc("/user", handlers.UpdateUserHandler(logger, userService)).Methods(http.MethodPut)
+	r.router.HandleFunc("/user/{id}", handlers.DeleteUserHandler(logger, userService)).Methods(http.MethodDelete)
+	r.router.HandleFunc("/user/registration", handlers.RegisterHandler(logger, userService)).Methods(http.MethodPost)
+	r.router.HandleFunc("/user/password/new", handlers.UpdateUserPasswordHandler(logger, userService)).Methods(http.MethodPut)
+}
+Листинг Д.10 – Слой представления warehouse-service
+func (r *Router) SetupRoutes(logger goatlogger.Logger, warehouse service.WareHouse) {
+	r.router.HandleFunc("/products", handlers.GetProductsHandler(logger, warehouse)).Methods(http.MethodGet)
+	r.router.HandleFunc("/product/client/{id}", handlers.GetClientProductsHandler(logger, warehouse)).Methods(http.MethodGet)
+	r.router.HandleFunc("/product/{productId}", handlers.GetDetailedProductHandler(logger, warehouse)).Methods(http.MethodGet)
+	r.router.HandleFunc("/materials/list", handlers.GetMaterialsList(logger, warehouse)).Methods(http.MethodGet)
+	r.router.HandleFunc("/products", handlers.AddProductsHandler(logger, warehouse)).Methods(http.MethodPost)
+	r.router.HandleFunc("/products", handlers.UpdateProductsHandler(logger, warehouse)).Methods(http.MethodPut)
+	r.router.HandleFunc("/products", handlers.DeleteProductsHandler(logger, warehouse)).Methods(http.MethodDelete)
+	r.router.HandleFunc("/products/items", handlers.GetProductItemsInfoHandler(logger, warehouse)).Methods(http.MethodPost)
+	r.router.HandleFunc("/products/detailed", handlers.GetDetailedProductsHandler(logger, warehouse)).Methods(http.MethodPost)
+} 
+Приложение Е
+(обязательное)
+Структуры слоя бизнес-логики 
+Листинг Е.1 – Слой бизнес-логики auth-service
+type AuthService interface {
+	Login(username, password string) (domain.TokenResponse, error)
+	Logout(refreshToken string)
+	RefreshToken(token string) (domain.TokenResponse, error)
+	UpdatePassword(request domain.UpdatePasswordRequest) error
+}
+type AuthServiceImpl struct {
+	hasher      PasswordHasher
+	jwtService  JwtService
+	userService *userservice.Client
+}
+func NewAuthService(hasher PasswordHasher, jwtService JwtService, userClient *userservice.Client) AuthService {
+	return &AuthServiceImpl{
+		hasher:      hasher,
+		jwtService:  jwtService,
+		userService: userClient,
+	}
+}
+Листинг Е.2 – Слой бизнес-логики cart-service
+type Cart interface {
+	GetCart(ctx goatcontext.Context) (domain.Cart, error)
+	AddCartItem(ctx goatcontext.Context, item domain.CartItem) (domain.CartItem, error)
+	RemoveCartItem(ctx goatcontext.Context, id int) error
+	UpdateCartItem(ctx goatcontext.Context, cartItem domain.CartItem) error
+	ClearCartItems(ctx goatcontext.Context) error
+	GetCartItems(ctx goatcontext.Context, ids []int) ([]domain.CartItem, error)
+}
+type CartServiceImpl struct {
+	cartRepository  repository.Cart
+	warehouseClient *warehouse.Client
+}
+func NewCartServiceImpl(cartRepository repository.Cart, warehouseClient *warehouse.Client) Cart {
+	return &CartServiceImpl{
+		cartRepository:  cartRepository,
+		warehouseClient: warehouseClient,
+	}
+}
+Листинг Е.3 – Слой бизнес-логики client-service
+type Client interface {
+	GetClients(ctx goatcontext.Context) ([]domain.Client, error)
+	GetClient(ctx goatcontext.Context, id int) (domain.Client, error)
+	AddClient(ctx goatcontext.Context, client domain.Client) (domain.Client, error)
+	UpdateClient(ctx goatcontext.Context, client domain.Client) error
+	DeleteClient(ctx goatcontext.Context, id int) error
+	GetClientsByIds(ctx goatcontext.Context, ids []int) ([]domain.Client, error)
+}
+type ClientServiceImpl struct {
+	clientRepository repository.Client
+}
+func NewClientService(clientRepository repository.Client) Client {
+	return &ClientServiceImpl{
+		clientRepository: clientRepository,
+	}
+}
+Листинг Е.4 – Слой бизнес-логики notifier-service
+type Sender interface {
+	Send(message domain.Mail) error
+}
+type SenderImpl struct {
+	receiver   string
+	sender     string
+	smtpClient *client.Smtp
+}
+func NewSender(receiver string, sender string, smtpClient *client.Smtp) Sender {
+	return &SenderImpl{
+		receiver: receiver,
+	}
+}
+Листинг Е.5 – Слой бизнес-логики order-service
+type Order interface {
+	Order(ctx goatcontext.Context, cartItemsIds []int) error
+	GetUserOrders(ctx goatcontext.Context) ([]domain.Order, error)
+	GetLatestOrders(ctx goatcontext.Context) ([]domain.ReportItem, error)
+}
+type OrderServiceImpl struct {
+	cartService       *cart.Client
+	warehouseService  *warehouse.Client
+	orderRepository   repository.Order
+	financeRepository repository.Finance
+	kafkaProducer     *kafka.Producer
+}
+func NewOrderService(cartService *cart.Client, warehouseService *warehouse.Client, orderRepository repository.Order, financeRepository repository.Finance) Order {
+	return &OrderServiceImpl{
+		cartService:       cartService,
+		warehouseService:  warehouseService,
+		orderRepository:   orderRepository,
+		financeRepository: financeRepository,
+	}
+}
+Листинг Е.6 – Слой бизнес-логики report-service
+type Report interface {
+	GetFactoryReport(ctx goatcontext.Context, factoryId int, date time.Time) (*excelize.File, error)
+	GetUserReport(ctx goatcontext.Context, userId int, date time.Time) (*excelize.File, error)
+}
+type ReportService struct {
+	reportRepository repository.Report
+}
+func NewReportService(reportRepository repository.Report) Report {
+	return &ReportService{
+		reportRepository: reportRepository,
+	}
+}
+Листинг Е.7 – Слой бизнес-логики request-service
+type Request interface {
+	GetRequests(ctx goatcontext.Context) ([]domain.Request, error)
+	UpdateStatus(ctx goatcontext.Context, id int, status domain.Status) error
+}
+type Impl struct {
+	requestRepository repository.Request
+	warehouseClient   *warehouse.Client
+	notifierClient    *notifier.Client
+}
+func NewRequestService(requestRepository repository.Request, warehouseClient *warehouse.Client, notifierClient *notifier.Client) Request {
+	return &Impl{
+		requestRepository: requestRepository,
+		warehouseClient:   warehouseClient,
+		notifierClient:    notifierClient,
+	}
+}
+Листинг Е.8 – Слой бизнес-логики search-service
+type Search interface {
+	GetFilters(ctx goatcontext.Context) ([]domain.Filter, error)
+	GetCatalog(ctx goatcontext.Context, searchId string, appliedFilters domain.AppliedFilters) (domain.Catalog, error)
+	GetProductCatalog(ctx goatcontext.Context, productId int) (domain.Product, error)
+}
+type SearchService struct {
+	filterRepository repository.Filter
+	cacheRepository  repository.Cache
+	warehouseClient  *warehouse.Client
+}
+func New(filterRepository repository.Filter, cacheRepository repository.Cache, warehouseClient *warehouse.Client) Search {
+	return &SearchService{
+		filterRepository: filterRepository,
+		cacheRepository:  cacheRepository,
+		warehouseClient:  warehouseClient,
+	}
+}
+Листинг Е.9 – Слой бизнес-логики user-service
+type User interface {
+	GetUsers(ctx goatcontext.Context) ([]domain.User, error)
+	GetUserById(ctx goatcontext.Context, userId int) (domain.User, error)
+	GetUserByUsername(ctx goatcontext.Context, userName string) (domain.User, error)
+	AddUser(ctx goatcontext.Context, user domain.User) (domain.User, error)
+	UpdateUser(ctx goatcontext.Context, user domain.User) error
+	DeleteUser(ctx goatcontext.Context, userId int) error
+	UpdateUserPassword(ctx goatcontext.Context, request domain.UpdatePasswordRequest) error
+}
+type UserServiceImpl struct {
+	userRepository repository.User
+	roleRepository repository.Role
+	notifierClient *notifier.Client
+}
+func NewUserService(userRepository repository.User, roleRepository repository.Role, notifierClient *notifier.Client) User {
+	return &UserServiceImpl{
+		userRepository: userRepository,
+		roleRepository: roleRepository,
+		notifierClient: notifierClient,
+	}
+}
+Листинг Е.10 – Слой бизнес-логики warehouse-service
+type WareHouse interface {
+	GetProducts(ctx goatcontext.Context) ([]domain.Product, error)
+	AddProducts(ctx goatcontext.Context, products []domain.Product) error
+	UpdateProducts(ctx goatcontext.Context, products []domain.Product) error
+	DeleteProducts(ctx goatcontext.Context, productIds []int) error
+}
+type Impl struct {
+	warehouseRepository repository.Warehouse
+	clientServiceClient *clientservice.Client
+	kafkaProducer       *broker.Producer
+}
+func NewWarehouseService(warehouseRepository repository.Warehouse, clientServiceClient *clientservice.Client, kafkaProducer *broker.Producer) WareHouse {
+	return &Impl{
+		warehouseRepository: warehouseRepository,
+		clientServiceClient: clientServiceClient,
+		kafkaProducer:       kafkaProducer,
+	}
+} 
+Приложение Ж
+(обязательное)
+Структуры слоя обращения к базе данных 
+Листинг Ж.1 – Слой обращения к базе данных cart-service
+type Cart interface {
+	GetCart(ctx goatcontext.Context) (cart database.Cart, err error)
+	CreateCart(ctx goatcontext.Context, cart database.Cart) (id int64, err error)
+	GetCartItems(ctx goatcontext.Context, cartId int) (items []database.CartItem, err error)
+	AddCartItem(ctx goatcontext.Context, cartItem database.CartItem) (id int64, err error)
+	UpdateCartItem(ctx goatcontext.Context, cartItem database.CartItem) error
+	DeleteCartItems(ctx goatcontext.Context, cartItemIds []int) error
+	ClearCartItems(ctx goatcontext.Context, cartId int) error
+	GetCartItemsByIds(ctx goatcontext.Context, ids []int) (items []database.CartItem, err error)
+}
+type CartRepositoryImpl struct {
+	postgres *sqlx.DB
+}
+func NewCartRepository(postgres *sqlx.DB) Cart {
+	return &CartRepositoryImpl{
+		postgres: postgres,
+	}
+}
+Листинг Ж.2 – Слой обращения к базе данных client-service
+type Client interface {
+	GetClients(ctx goatcontext.Context) (clients []database.Client, err error)
+	GetClient(ctx goatcontext.Context, id int) (client database.Client, err error)
+	AddClient(ctx goatcontext.Context, client database.Client) (id int, err error)
+	UpdateClient(ctx goatcontext.Context, client database.Client) error
+	DeleteClient(ctx goatcontext.Context, id int) error
+	GetClientsByIds(ctx goatcontext.Context, ids []int) (clients []database.Client, err error)
+}
+type ClientRepositoryImpl struct {
+	postgres *sqlx.DB
+}
+func NewClientRepository(postgres *sqlx.DB) Client {
+	return &ClientRepositoryImpl{
+		postgres: postgres,
+	}
+}
+Листинг Ж.3 – Слой обращения к базе данных order-service
+type Order interface {
+	GetUserOrders(ctx goatcontext.Context, userId int) (orders []database.Order, err error)
+	CreateOrder(ctx goatcontext.Context, order database.Order) error
+	GetOrderItems(ctx goatcontext.Context, orderId uuid.UUID) (items []database.OrderItem, err error)
+	CreateOrderItem(ctx goatcontext.Context, orderItem database.OrderItem) error
+	GetLatestOrders(ctx goatcontext.Context, startDate, endDate time.Time) (orders []database.LatestOrder, err error)
+}
+type OrderRepositoryImpl struct {
+	postgres *sqlx.DB
+}
+func NewOrderRepository(postgres *sqlx.DB) Order {
+	return &OrderRepositoryImpl{
+		postgres: postgres,
+	}
+}
+type Finance interface {
+	GetOrderOperation(ctx goatcontext.Context, orderId uuid.UUID) (operation database.Operation, err error)
+	CreateOrderOperation(ctx goatcontext.Context, operation database.Operation) error
+	GetOperationDetails(ctx goatcontext.Context, operationId uuid.UUID) (details []database.OperationDetail, err error)
+	CreateOperationDetail(ctx goatcontext.Context, operation database.OperationDetail) error
+}
+type FinanceRepositoryImpl struct {
+	postgres *sqlx.DB
+}
+func NewFinanceRepository(postgres *sqlx.DB) Finance {
+	return &FinanceRepositoryImpl{
+		postgres: postgres,
+	}
+}
+Листинг Ж.4– Слой обращения к базе данных request-service
+type Request interface {
+	GetRequestById(ctx goatcontext.Context, id int) (request database.Request, err error)
+	GetPendingRequests(ctx goatcontext.Context) ([]database.Request, error)
+	AddRequest(ctx goatcontext.Context, request database.Request) error
+	UpdateRequestStatus(ctx goatcontext.Context, id int, status string) error
+}
+type Impl struct {
+	postgres *sqlx.DB
+}
+func NewRequestRepository(postgres *sqlx.DB) Request {
+	return &Impl{
+		postgres: postgres,
+	}
+}
+Листинг Ж.5 – Слой обращения к базе данных user-service
+type User interface {
+	GetUsers(ctx goatcontext.Context) ([]database.User, error)
+	GetUserById(ctx goatcontext.Context, userId int) (database.User, error)
+	GetUserByUsername(ctx goatcontext.Context, username string) (database.User, error)
+	AddUser(ctx goatcontext.Context, user database.User) (int, error)
+	UpdateUser(ctx goatcontext.Context, user database.User) error
+	DeleteUser(ctx goatcontext.Context, userId int) error
+}
+type UserRepositoryImpl struct {
+	postgres *sqlx.DB
+}
+func NewUserRepository(postgres *sqlx.DB) User {
+	return &UserRepositoryImpl{
+		postgres: postgres,
+	}
+}
+type Role interface {
+	GetRoleIdByName(ctx goatcontext.Context, name string) (int, error)
+	GetRoleById(ctx goatcontext.Context, id int) (name string, err error)
+}
+type RoleRepository struct {
+	postgres *sqlx.DB
+}
+func NewRoleRepository(postgres *sqlx.DB) Role {
+	return &RoleRepository{
+		postgres: postgres,
+	}
+}
+Листинг Ж.6 – Слой обращения к базе данных warehouse-service
+type Warehouse interface {
+	GetProducts(ctx goatcontext.Context) ([]models.Product, error)
+	AddProducts(ctx goatcontext.Context, products []models.Product) ([]models.Product, error)
+	UpdateProducts(ctx goatcontext.Context, products []models.Product) error
+	DeleteProducts(ctx goatcontext.Context, productIds []int) error
+}
+type Init struct {
+	postgres *sqlx.DB
+}
+func NewWarehouseRepository(postgres *sqlx.DB) Warehouse {
+	return &Init{
+		postgres: postgres,
+	}
+} 
+Приложение И
+(обязательное)
+Листинг модульных тестов 
+Листинг И.1 – Файл request_test.go
+package service
+import (
+	"errors"
+	"request-service/cluster/notifier"
+	"request-service/cluster/warehouse"
+	"request-service/database"
+	"request-service/domain"
+	"testing"
+	"time"
+
+	"github.com/GOAT-prod/goatcontext"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+type MockRequestRepository struct {
+	mock.Mock
+}
+
+func (m *MockRequestRepository) GetPendingRequests(ctx goatcontext.Context) ([]database.Request, error) {
+	args := m.Called(ctx)
+	return args.Get(0).([]database.Request), args.Error(1)
+}
+
+func (m *MockRequestRepository) UpdateRequestStatus(ctx goatcontext.Context, id int, status string) error {
+	args := m.Called(ctx, id, status)
+	return args.Error(0)
+}
+
+func (m *MockRequestRepository) GetRequestById(ctx goatcontext.Context, id int) (database.Request, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(database.Request), args.Error(1)
+}
+
+type MockWarehouseClient struct {
+	mock.Mock
+}
+
+func (m *MockWarehouseClient) GetDetailedProduct(ctx goatcontext.Context, productId string) (domain.Product, error) {
+	args := m.Called(ctx, productId)
+	return args.Get(0).(domain.Product), args.Error(1)
+}
+
+type MockNotifierClient struct {
+	mock.Mock
+}
+
+func (m *MockNotifierClient) SendMail(ctx goatcontext.Context, mail notifier.Mail) error {
+	args := m.Called(ctx, mail)
+	return args.Error(0)
+}
+
+func TestImpl_UpdateStatus(t *testing.T) {
+	ctx := goatcontext.NewContext()
+	requestId := 123
+	productId := "product-1"
+
+	testProduct := domain.Product{
+		Id:   productId,
+		Name: "Test Product",
+		Items: []domain.ProductItem{
+			{
+				Id:    productId,
+				Color: "Red",
+				Size:  "M",
+			},
+		},
+	}
+
+	testRequest := database.Request{
+		Id:         requestId,
+		Status:     "PENDING",
+		Type:       "SUPPLY",
+		UpdateDate: time.Now(),
+		Items: []database.RequestItem{
+			{
+				ProductId:        productId,
+				ProductItemCount: 5,
+			},
+		},
+	}
+
+	t.Run("успешное обновление статуса (не ApprovedStatus)", func(t *testing.T) {
+		mockRepo := new(MockRequestRepository)
+		mockWarehouse := new(MockWarehouseClient)
+		mockNotifier := new(MockNotifierClient)
+
+		service := NewRequestService(mockRepo, &warehouse.Client{Client: mockWarehouse}, &notifier.Client{Client: mockNotifier})
+
+		mockRepo.On("UpdateRequestStatus", ctx, requestId, "REJECTED").Return(nil)
+
+		err := service.UpdateStatus(ctx, requestId, domain.Status("REJECTED"))
+
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+		mockWarehouse.AssertNotCalled(t, "GetDetailedProduct")
+		mockNotifier.AssertNotCalled(t, "SendMail")
+	})
+
+	t.Run("успешное обновление статуса до ApprovedStatus", func(t *testing.T) {
+		mockRepo := new(MockRequestRepository)
+		mockWarehouse := new(MockWarehouseClient)
+		mockNotifier := new(MockNotifierClient)
+
+		service := NewRequestService(mockRepo, &warehouse.Client{Client: mockWarehouse}, &notifier.Client{Client: mockNotifier})
+
+		mockRepo.On("UpdateRequestStatus", ctx, requestId, "APPROVED").Return(nil)
+		mockRepo.On("GetRequestById", ctx, requestId).Return(testRequest, nil)
+		mockWarehouse.On("GetDetailedProduct", ctx, productId).Return(testProduct, nil)
+		mockNotifier.On("SendMail", ctx, mock.Anything).Return(nil)
+
+		err := service.UpdateStatus(ctx, requestId, domain.ApprovedStatus)
+
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+
+		time.Sleep(100 * time.Millisecond)
+		mockWarehouse.AssertExpectations(t)
+		mockNotifier.AssertExpectations(t)
+	})
+
+	t.Run("ошибка при обновлении статуса", func(t *testing.T) {
+		mockRepo := new(MockRequestRepository)
+		mockWarehouse := new(MockWarehouseClient)
+		mockNotifier := new(MockNotifierClient)
+
+		service := NewRequestService(mockRepo, &warehouse.Client{Client: mockWarehouse}, &notifier.Client{Client: mockNotifier})
+
+		expectedErr := errors.New("database error")
+		mockRepo.On("UpdateRequestStatus", ctx, requestId, "APPROVED").Return(expectedErr)
+
+		err := service.UpdateStatus(ctx, requestId, domain.ApprovedStatus)
+
+		assert.Error(t, err)
+		assert.Equal(t, expectedErr, err)
+		mockRepo.AssertExpectations(t)
+		mockWarehouse.AssertNotCalled(t, "GetDetailedProduct")
+		mockNotifier.AssertNotCalled(t, "SendMail")
+	})
+	t.Run("ошибка при отправке сообщения после обновления до ApprovedStatus", func(t *testing.T) {
+		mockRepo := new(MockRequestRepository)
+		mockWarehouse := new(MockWarehouseClient)
+		mockNotifier := new(MockNotifierClient)
+
+		service := NewRequestService(mockRepo, &warehouse.Client{Client: mockWarehouse}, &notifier.Client{Client: mockNotifier})
+
+		mockRepo.On("UpdateRequestStatus", ctx, requestId, "APPROVED").Return(nil)
+		mockRepo.On("GetRequestById", ctx, requestId).Return(testRequest, nil)
+		mockWarehouse.On("GetDetailedProduct", ctx, productId).Return(testProduct, nil)
+		mockNotifier.On("SendMail", ctx, mock.Anything).Return(errors.New("notification error"))
+
+		err := service.UpdateStatus(ctx, requestId, domain.ApprovedStatus)
+
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+
+		time.Sleep(100 * time.Millisecond)
+		mockWarehouse.AssertExpectations(t)
+		mockNotifier.AssertExpectations(t)
+	})
+} 
+Приложение К
+(рекомендуемое)
+Иллюстрационные материалы к тестированию API 
+ 
+Рисунок К.1 – Корректная регистрация пользователя
+ 
+Рисунок К.2 – Корректная авторизация пользователя
+ 
+Рисунок К.3 – Корректное получение корзины пользователя
+ 
+Рисунок К.4 – Корректное добавление продукции в корзину
+ 
+Рисунок К.5 – Корректное удаление продукта из корзины
+ 
+Рисунок К.6 – Корректное получение клиентов
+ 
+Рисунок К.7 – Корректное изменение клиента
+ 
+Рисунок К.8 – Корректное удаление клиента
+ 
+Рисунок К.9 – Корректное создание заказа
+ 
+Рисунок К.10 – Корректное получение заказов пользователя
+ 
+Рисунок К.11 – Корректное получение продукции со склада
+ 
+Рисунок К.12 – Корректное добавление продукции
+ 
+Рисунок К.13 – Корректное изменение продукции
+ 
+Рисунок К.14 – Корректное получение каталога продукции
+ 
+Рисунок К.15 – Корректное получение каталога по одной продукции
+ 
+Рисунок К.16 – Корректное получение списка пользователей
+ 
+Рисунок К.17 – Корректное изменение информации пользователя
+ 
+Рисунок К.18 – Корректное добавление нового пользователя
+ 
+Рисунок К.19 – Корректное удаление существующего пользователя
+ 
+Рисунок К.20 – Корректное получение списка доступных фильтров для каталога продукции
+ 
+Рисунок К.21 – Корректное получение отчета по продажам производителя
+ 
+Рисунок К.22 – Результат генерации отчета по продажам производителя
+ 
+Рисунок К.23 – Корректная генерация отчета о покупках пользователя
+ 
+Рисунок К.24 – Результат генерации отчета о покупках пользователя
+ 
+Рисунок К.25 – Корректное получение списка запросов на ожидании
+ 
+Рисунок К.26 – Корректное подтверждение запроса по продукции 
+Приложение Л
+(рекомендуемое)
+Графическая часть 
+ 
+Рисунок Л.1 – Диаграмма Ганта 
+ 
+Рисунок Л.2 – Список задач проекта
+ 
+Рисунок Л.3 – Список ресурсов проекта
+
+
+
+
+
+Приложение А
+(справочное)
+Глоссарий
+ 
+БД (База данных) – это имеющая название совокупность данных, которая отражает состояние объектов и их отношений в рассматриваемой предметной области.
+СУБД (Система управления базами данных) – это совокупность программных и лингвистических средств общего или специального назначения, обеспечивающих управление созданием и использованием баз данных.
+Microsoft SQL Server (MS SQL Server) – это реляционная система управления базами данных (СУБД) от компании Microsoft, предназначена для хранения, обработки и анализа информации в различных сферах – от веб-приложений до корпоративных информационных систем. 
+Фреймворк – программная платформа, задающая архитектурные принципы и общие правила разработки приложений в определенной предметной области.
+Веб-браузер – прикладное программное обеспечение для поиска и просмотра веб-страниц, а также управления веб-приложениями;
+Веб-приложение –это клиент-серверное программное решение, доступ к которому осуществляется через сетевой браузер посредством передачи данных по протоколу HTTP, размещается на удаленном сервере
+AJAX (Asynchronous JavaScript and XML) – это веб-технология, которая позволяет обмениваться запросами с сервером, отправлять и получать от него данные без перезагрузки страницы.
+.NET – это платформа для разработчиков, состоящая из инструментов, языков программирования и библиотек для создания множества различных типов приложений. ASP.NET Core расширяет платформу разработчика .NET инструментами и библиотеками, специально предназначенными для создания веб-приложений.
+MVC – это архитектурный паттерн, предписывающий разделение программного кода на три взаимосвязанных компонента: модель данных, представление для визуализации информации и контроллер для обработки пользовательских запросов.
+ 
+Приложение Б
+(обязательное)
+Листинг приложения 
+Листинг Б.1 – Файл HomeController.cs
+using System.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
+using MortgageCalc.Models;
+using MortgageCalc.Data;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+
+namespace MortgageCalc.Controllers
+{
+    public class HomeController : Controller
+
+И так далее - очень много кода
+
+Приложение В
+(рекомендуемое)
+Графическая часть 
+ 
+Рисунок В.1 – Отчет об использовании ресурсов 
+ 
+Рисунок В.2 – Отчет о бюджете проекта 
+Приложение Г
+(рекомендуемое)
+Результаты функционального тестирования 
+ 
+Рисунок Г.1 – Результаты тестирования класса эквивалентности «Длина меньше семи символов»
+ 
+Рисунок Г.2 – Результаты тестирования класса эквивалентности «Недопустимость ввода букв»
+ 
+Рисунок Г.3 – Результаты тестирования класса эквивалентности «Первая цифра ноль»
+ 
+Рисунок Г.4 – Результаты тестирования класса эквивалентности «Длина меньше семи, содержит не только цифры, начинается с нуля»
+ 
+Рисунок Г.5 – Результаты тестирования класса эквивалентности «Длина больше девяти содержит не только цифры, начинается с нуля»
+ 
+Рисунок Г.6 – Результаты тестирования логической границы «Отсутствие символов»
+ 
+Рисунок Г.7 – Результаты тестирования логической границы «Отрицательное число»
+ 
+Рисунок Г.8 – Результаты тестирования логической границы «Число равно нулю и начинается с нуля»
+ 
+Рисунок Г.9 – Результаты тестирования логической границы «Число не является целым»
+ 
+Рисунок Г.10 – Результаты тестирования логической границы «Размер числа больше допустимого по типу»
+
+ 
+Приложение Д
+(рекомендуемое)
+Листинг модульных тестов 
+using System;
+using System.Collections.Generic;
+using Xunit;
+using MortgageCalculatorApp;
+
+public class MortgageCalculatorTests
+{
+    [Fact]
+    public void CalculateLoanAmount_CorrectValue()
+    {
+        Assert.Equal(400000, MortgageCalculator.CalculateLoanAmount(500000, 100000));
+        Assert.Equal(500000, MortgageCalculator.CalculateLoanAmount(700000, 200000));
+    }
+
+    [Fact]
+    public void CalculateMonthlyPayment_CorrectValue()
+    {
+        Assert.Equal(4824.32, MortgageCalculator.CalculateMonthlyPayment(500000, 10, 20), 2);
+        Assert.Equal(2866.12, MortgageCalculator.CalculateMonthlyPayment(300000, 8, 15), 2);
+    }
+
+    [Fact]
+    public void CalculateTotalPayment_CorrectValue()
+    {
+        Assert.Equal(1157836.80, MortgageCalculator.CalculateTotalPayment(4824.32, 20), 2);
+        Assert.Equal(515901.60, MortgageCalculator.CalculateTotalPayment(2866.12, 15), 2);
+    }
+
+    [Fact]
+    public void CalculateRequired_CorrectValue()
+    {
+        Assert.Equal(16081.07, MortgageCalculator.CalculateRequiredIncome(4824.32, 30), 2);
+        Assert.Equal(11464.48, MortgageCalculator.CalculateRequiredIncome(2866.12, 25), 2);
+    }
+
+    [Fact]
+    public void GetBankOffers_ValidOffers()
+    {
+        var offers = MortgageCalculator.GetBankOffers(500000, 10, 20);
+        Assert.NotNull(offers);
+        Assert.NotEmpty(offers);
+        Assert.All(offers, offer => Assert.NotNull(offer.BankName));
+        Assert.All(offers, offer => Assert.True(offer.InterestRate > 0));
+        Assert.All(offers, offer => Assert.True(offer.MonthlyPayment > 0));
+    }
+}

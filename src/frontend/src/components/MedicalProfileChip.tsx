@@ -25,7 +25,7 @@ export default function MedicalProfileChip({ slug, variant = "color", className 
   return (
     <span
       className={classNames(
-        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium",
+        "inline-flex max-w-full items-center rounded-full px-2.5 py-1 text-xs font-medium break-words text-left whitespace-normal",
         styles,
         className,
       )}

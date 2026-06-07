@@ -1,0 +1,45 @@
+@startuml
+!include _skin_bw.puml
+skinparam linetype ortho
+top to bottom direction
+
+' Структура экранов SPA (src/frontend/src/App.tsx, Navbar, AdminLayout).
+' Подпись «Рисунок 7» — только в тексте ПЗ, не на холсте.
+
+rectangle "Панель навигации\n(логотип, пункты меню, RU/EN, роль, вход/выход)" as Nav
+
+together {
+  package "Публичный доступ" as Pub {
+    rectangle "Каталог санаториев\nмаршрут /" as Catalog
+    rectangle "Карточка санатория\nмаршрут /sanatoriums/:id" as Detail
+    rectangle "Вход\nмаршрут /login" as Login
+    rectangle "Регистрация\nмаршрут /register" as Register
+  }
+}
+
+together {
+  package "Клиент\n(JWT, role = client)" as ClientPkg {
+    rectangle "Мои бронирования\nмаршрут /bookings" as Bookings
+  }
+}
+
+together {
+  package "Администратор\n(JWT, role = admin)" as AdminPkg {
+    rectangle "Реестр бронирований\nмаршрут /admin/bookings" as AdmBook
+    rectangle "Управление санаториями\nмаршрут /admin/sanatoriums" as AdmSan
+  }
+}
+
+Nav --> Catalog
+Nav --> Bookings : client
+Nav --> AdmBook : admin
+Nav --> Login : гость
+Nav --> Register : гость
+
+Catalog --> Detail : выбор объекта
+Login --> Catalog : успешный вход
+Register --> Login : успешная регистрация
+Detail --> Bookings : оформление бронирования
+AdmBook <--> AdmSan : вкладки админ-панели
+
+@enduml
